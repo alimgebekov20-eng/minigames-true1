@@ -71,6 +71,23 @@ io.on('connection', (socket) => {
     callback({ success: true, user: { id: user.id, login: user.login, nickname: user.nickname, elo: user.elo, avatar: user.avatar } });
   });
 
+  socket.on('updateAvatar', ({ userId, avatarUrl }, callback) => {
+    const user = db.users[userId];
+    if (!user) return callback({ error: 'Пользователь не найден' });
+    
+    user.avatarUrl = avatarUrl;
+    saveDB();
+    
+    // Если игрок уже в лобби, обновляем его данные и там
+    Object.values(db.lobbies).forEach(lobby => {
+      const p = lobby.players.find(p => p.id === userId);
+      if (p) p.avatarUrl = avatarUrl;
+    });
+    
+    callback({ success: true });
+    io.emit('lobbiesUpdated'); // Обновляем список лобби
+  });
+
   socket.on('updateNickname', ({ userId, nickname }, callback) => {
     const user = db.users[userId];
     if (!user) return callback({ error: 'Пользователь не найден' });

@@ -355,33 +355,40 @@ function renderSettings() {
         <h2><i class="fas fa-cog"></i> Настройки</h2>
         <button class="secondary" id="back-btn"><i class="fas fa-arrow-left"></i> Назад</button>
       </div>
+
+      <!-- Блок смены аватарки -->
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--surface-2);">
+        <div class="avatar" id="settings-avatar-preview" style="width:72px;height:72px;font-size:32px;">
+          ${renderAvatar(currentUser)}
+        </div>
+        <div>
+          <input type="file" id="avatar-upload" accept="image/*" style="display:none;" />
+          <button class="primary" id="btn-upload-avatar" style="padding:8px 16px; font-size:14px;">
+            <i class="fas fa-camera"></i> Загрузить фото
+          </button>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">Поддерживаются JPG, PNG</div>
+        </div>
+      </div>
+
       <div>
         <label>Никнейм</label>
         <input id="setting-nickname" value="${currentUser.nickname}" />
         <button class="primary" id="save-nickname" style="margin-top:12px;width:100%;">Сохранить никнейм</button>
       </div>
-      <div style="margin-top:24px;">
-        <label>Тема</label>
-        <select id="setting-theme" disabled>
-          <option value="dark">Тёмная (в разработке)</option>
-        </select>
-      </div>
-      <div style="margin-top:16px;">
-        <label>Звук</label>
-        <select id="setting-sound" disabled>
-          <option value="on">Включён (в разработке)</option>
-        </select>
-      </div>
+      
+      <button class="secondary" id="logout-btn" style="margin-top:32px; width:100%; color:var(--danger);">
+        <i class="fas fa-sign-out-alt"></i> Выйти из аккаунта
+      </button>
     </div>
   `;
   
   document.getElementById('back-btn').onclick = renderMainMenu;
   
+  // Смена ника
   document.getElementById('save-nickname').onclick = () => {
     const newNick = document.getElementById('setting-nickname').value.trim();
     if (!newNick) return alert('Введите никнейм');
     
-    // Отправляем на сервер (нужно добавить обработчик в server.js)
     socket.emit('updateNickname', { userId: currentUser.id, nickname: newNick }, (res) => {
       if (res.error) return alert(res.error);
       currentUser.nickname = newNick;
@@ -389,6 +396,67 @@ function renderSettings() {
       renderMainMenu();
     });
   };
+
+  // Смена аватарки
+  const fileInput = document.getElementById('avatar-upload');
+  document.getElementById('btn-upload-avatar').onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Сжимаем картинку в браузере перед отправкой
+    compressImage(file, (base64) => {
+      socket.emit('updateAvatar', { userId: currentUser.id, avatarUrl: base64 }, (res) => {
+        if (res.error) return alert(res.error);
+        currentUser.avatarUrl = base64;
+        document.getElementById('settings-avatar-preview').innerHTML = renderAvatar(currentUser);
+        alert('Аватарка обновлена!');
+      });
+    });
+  };
+
+  // Выход из аккаунта
+  document.getElementById('logout-btn').onclick = () => {
+    if (confirm('Точно выйти из аккаунта?')) {
+      localStorage.removeItem('token');
+      window.location.reload();
+    }
+  };
+}
+
+// Вспомогательная функция для сжатия картинки
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Размеры новой аватарки (128x128 для оптимизации)
+      const MAX_SIZE = 128;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height && width > MAX_SIZE) {
+        height *= MAX_SIZE / width;
+        width = MAX_SIZE;
+      } else if (height > MAX_SIZE) {
+        width *= MAX_SIZE / height;
+        height = MAX_SIZE;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Конвертируем в JPEG с качеством 80% (чтобы база не тормозила)
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 // Запуск

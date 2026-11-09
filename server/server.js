@@ -10,7 +10,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 // Раздача статических файлов клиента (сайта)
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(__dirname));
 
 // ---------- ПРОСТАЯ БАЗА ДАННЫХ (вместо lowdb) ----------
 const dbFile = path.join(__dirname, 'db.json');

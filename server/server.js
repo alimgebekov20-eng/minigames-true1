@@ -71,6 +71,14 @@ io.on('connection', (socket) => {
     callback({ success: true, user: { id: user.id, login: user.login, nickname: user.nickname, elo: user.elo, avatar: user.avatar } });
   });
 
+  socket.on('updateNickname', ({ userId, nickname }, callback) => {
+    const user = db.users[userId];
+    if (!user) return callback({ error: 'Пользователь не найден' });
+    user.nickname = nickname;
+    saveDB();
+    callback({ success: true });
+  });
+
   // ---- Лобби ----
   socket.on('getLobbies', (callback) => {
     const lobbies = Object.values(db.lobbies).map(l => ({

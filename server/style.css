@@ -168,10 +168,9 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .bottom-bar { display: flex; gap: 12px; margin-top: auto; }
 .bottom-bar button { padding: 16px; font-size: 16px; }
 
-/* Логика ширины кнопок */
-.leave-btn { flex: 1; } /* У обычного игрока на всю ширину */
-.admin .leave-btn { flex: 1; } /* У админа 1 часть */
-.admin .start-btn { flex: 2; } /* У админа кнопка начать в 2 раза шире */
+.leave-btn { flex: 1; }
+.admin .leave-btn { flex: 1; }
+.admin .start-btn { flex: 2; }
 
 /* Модалка */
 .modal-overlay {
@@ -205,8 +204,99 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .shape-diamond::before { content: '◆'; }
 .shape-hexagon::before { content: '⬡'; }
 .shape-star::before { content: '★'; }
-/* Кнопка выхода из аккаунта */
-#logout-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--danger);
+
+
+/* ========================================= */
+/* =============== МИНИ-ИГРА =============== */
+/* ========================================= */
+
+/* Меню выбора игр */
+.game-menu { display: flex; flex-direction: column; }
+.game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.game-card { border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
+.game-card:hover { transform: translateY(-5px); }
+.game-banner { height: 160px; display: flex; align-items: center; justify-content: center; }
+.game-info { padding: 16px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
+.game-name { font-size: 18px; font-weight: 700; }
+
+/* Анимация БУМ */
+.game-anim-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
+.boom-text { font-size: 80px; font-weight: 900; color: var(--primary); animation: boom 0.8s ease-out; }
+@keyframes boom {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Экран игры */
+.game-screen { 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 500px; 
+  background: var(--surface); 
+  border-radius: var(--radius); 
+  padding: 32px; 
+}
+.game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.timer { font-size: 24px; font-weight: 800; color: var(--danger); background: rgba(239,68,68,0.1); padding: 8px 16px; border-radius: 8px; }
+
+/* Квадраты по центру */
+.game-board { 
+  display: flex; 
+  gap: 16px; 
+  justify-content: center; 
+  margin-bottom: 50px; 
+}
+.game-slot { 
+  width: 80px; 
+  height: 80px; 
+  border-radius: 16px; 
+  border: 3px dashed var(--surface-2); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: all 0.3s; 
+  background: var(--bg); 
+}
+.game-slot:hover { border-color: var(--primary); }
+
+/* Фигура внутри квадрата */
+.shape-in-slot { 
+  width: 100%; 
+  height: 100%; 
+  border-radius: 12px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 36px; 
+  color: white; 
+  animation: pop 0.2s ease-out; 
+}
+@keyframes pop { 
+  0% { transform: scale(0.5); } 
+  100% { transform: scale(1); } 
+}
+
+/* Панель с фигурами снизу */
+.game-shapes-bar { 
+  display: flex; 
+  gap: 20px; 
+  justify-content: center; 
+}
+.shape-btn { 
+  width: 64px; 
+  height: 64px; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 28px; 
+  color: white; 
+  cursor: pointer; 
+  transition: transform 0.2s, box-shadow 0.2s; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+}
+.shape-btn:hover { 
+  transform: scale(1.15); 
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
 }

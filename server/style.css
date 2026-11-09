@@ -300,3 +300,74 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   transform: scale(1.15); 
   box-shadow: 0 6px 20px rgba(0,0,0,0.5);
 }
+
+/* ============ РЕДАКТОР АВАТАРОК ============ */
+.avatar-editor-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  z-index: 2000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.editor-crop-area {
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 0 4px var(--surface-2), 0 10px 30px rgba(0,0,0,0.5);
+  cursor: grab;
+  touch-action: none; /* Отключаем скролл страницы при перетаскивании */
+}
+.editor-crop-area:active { cursor: grabbing; }
+
+.editor-crop-area img {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: top left;
+  pointer-events: none; /* Чтобы клики шли в контейнер */
+}
+
+/* Сетка как в телефоне */
+.editor-grid {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 33.33% 33.33%;
+  background-position: center;
+}
+
+.editor-controls {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.editor-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+.editor-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+}
+
+.editor-buttons button {
+  background: none;
+  color: var(--primary);
+  font-size: 16px;
+  padding: 10px 20px;
+}
+.editor-buttons button:hover { background: var(--surface-2); }

@@ -9,7 +9,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(__dirname)); // Ищет файлы в папке server
+app.use(express.static(path.join(__dirname, '../client'))); // Ищет файлы в папке client
 
 const dbFile = path.join(__dirname, 'db.json');
 let db = { users: {}, lobbies: {} };

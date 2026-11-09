@@ -218,17 +218,15 @@ function renderLobby() {
   if (isAdmin) {
     document.getElementById('start-btn').onclick = () => alert('Мини-игра пока не реализована');
     
-    // Обработка клика по игрокам (только для админа)
     document.querySelectorAll('.player-item').forEach(el => {
       el.onclick = () => {
         const targetId = el.dataset.id;
-        if (targetId === currentUser.id) return; // На себя не кликаем
+        if (targetId === currentUser.id) return; 
         openPlayerModal(targetId);
       };
     });
   }
 
-  // Настройка чата
   if (currentLobby.hasChat) {
     const chatMessages = document.getElementById('chat-messages');
     const chatInput = document.getElementById('chat-input');
@@ -253,7 +251,6 @@ function renderLobby() {
     chatSend.onclick = sendMessage;
     chatInput.onkeydown = (e) => { if (e.key === 'Enter') sendMessage(); };
 
-    // Слушаем новые сообщения
     socket.off('newMessage');
     socket.on('newMessage', (msg) => {
       currentLobby.chat.push(msg);
@@ -262,7 +259,6 @@ function renderLobby() {
     });
   }
 
-  // Слушаем обновления лобби (вход/выход игроков, кик, смена админа)
   socket.off('lobbyUpdated');
   socket.on('lobbyUpdated', (lobby) => {
     currentLobby = lobby;
@@ -293,7 +289,6 @@ function openPlayerModal(targetId) {
   const target = currentLobby.players.find(p => p.id === targetId);
   if (!target) return;
 
-  // Удаляем старую модалку, если она есть (чтобы не наслаивались)
   if (currentModal) currentModal.remove();
 
   const overlay = document.createElement('div');
@@ -347,7 +342,7 @@ function openPlayerModal(targetId) {
   currentModal = overlay;
 }
 
-// ---------- Настройки ----------
+// ---------- Настройки (НОВАЯ ВЕРСИЯ) ----------
 function renderSettings() {
   app.innerHTML = `
     <div class="card" style="max-width:500px;margin:0 auto;">
@@ -356,7 +351,7 @@ function renderSettings() {
         <button class="secondary" id="back-btn"><i class="fas fa-arrow-left"></i> Назад</button>
       </div>
 
-      <!-- Блок смены аватарки -->
+      <!-- Блок аватарки -->
       <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--surface-2);">
         <div class="avatar" id="settings-avatar-preview" style="width:72px;height:72px;font-size:32px;">
           ${renderAvatar(currentUser)}
@@ -366,7 +361,7 @@ function renderSettings() {
           <button class="primary" id="btn-upload-avatar" style="padding:8px 16px; font-size:14px;">
             <i class="fas fa-camera"></i> Загрузить фото
           </button>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">Поддерживаются JPG, PNG</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">JPG, PNG</div>
         </div>
       </div>
 
@@ -384,7 +379,6 @@ function renderSettings() {
   
   document.getElementById('back-btn').onclick = renderMainMenu;
   
-  // Смена ника
   document.getElementById('save-nickname').onclick = () => {
     const newNick = document.getElementById('setting-nickname').value.trim();
     if (!newNick) return alert('Введите никнейм');
@@ -397,7 +391,6 @@ function renderSettings() {
     });
   };
 
-  // Смена аватарки
   const fileInput = document.getElementById('avatar-upload');
   document.getElementById('btn-upload-avatar').onclick = () => fileInput.click();
 
@@ -405,7 +398,6 @@ function renderSettings() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Сжимаем картинку в браузере перед отправкой
     compressImage(file, (base64) => {
       socket.emit('updateAvatar', { userId: currentUser.id, avatarUrl: base64 }, (res) => {
         if (res.error) return alert(res.error);
@@ -416,7 +408,6 @@ function renderSettings() {
     });
   };
 
-  // Выход из аккаунта
   document.getElementById('logout-btn').onclick = () => {
     if (confirm('Точно выйти из аккаунта?')) {
       localStorage.removeItem('token');
@@ -425,7 +416,7 @@ function renderSettings() {
   };
 }
 
-// Вспомогательная функция для сжатия картинки
+// Функция сжатия картинки
 function compressImage(file, callback) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -433,8 +424,6 @@ function compressImage(file, callback) {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
-      // Размеры новой аватарки (128x128 для оптимизации)
       const MAX_SIZE = 128;
       let width = img.width;
       let height = img.height;
@@ -450,8 +439,6 @@ function compressImage(file, callback) {
       canvas.width = width;
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
-
-      // Конвертируем в JPEG с качеством 80% (чтобы база не тормозила)
       callback(canvas.toDataURL('image/jpeg', 0.8));
     };
     img.src = e.target.result;

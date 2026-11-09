@@ -4,10 +4,17 @@ const app = document.getElementById('app');
 let currentUser = null;
 let currentLobby = null;
 let currentModal = null;
-
-// Глобальные переменные для игры
 let gameCooldown = false;
 let animTimeouts = [];
+let isShowingResult = false; // Блокировка перерисовки во время анимации результата
+
+const SHAPES = [
+  { id: 'circle', icon: 'fa-circle', color: '#3b82f6' },
+  { id: 'square', icon: 'fa-square', color: '#ef4444' },
+  { id: 'triangle', icon: 'fa-play', color: '#22c55e' },
+  { id: 'diamond', icon: 'fa-gem', color: '#eab308' },
+  { id: 'pentagon', icon: 'fa-star', color: '#a855f7' }
+];
 
 function init() {
   const savedToken = localStorage.getItem('token');
@@ -23,7 +30,7 @@ function renderAuth() {
   app.innerHTML = `
     <div class="card auth-screen">
       <h1>🎮 Mini Games</h1>
-      <div><label>Логин (уникальный)</label><input id="reg-login" placeholder="pro_player" /></div>
+      <div><label>Логин</label><input id="reg-login" placeholder="pro_player" /></div>
       <div><label>Никнейм</label><input id="reg-nickname" placeholder="Ваше имя" /></div>
       <button class="primary" id="reg-btn" style="margin-top:8px;"><i class="fas fa-user-plus"></i> Создать аккаунт</button>
     </div>
@@ -31,13 +38,11 @@ function renderAuth() {
   document.getElementById('reg-btn').onclick = () => {
     const login = document.getElementById('reg-login').value.trim();
     const nickname = document.getElementById('reg-nickname').value.trim();
-    if (!login || !nickname) return alert('Заполните все поля');
-    
+    if (!login || !nickname) return alert('Заполните поля');
     socket.emit('register', { login, nickname }, (res) => {
       if (res.error) return alert(res.error);
       localStorage.setItem('token', res.token);
-      currentUser = res.user;
-      renderMainMenu();
+      currentUser = res.user; renderMainMenu();
     });
   };
 }
@@ -83,8 +88,7 @@ function renderSearchLobby() {
 
   function loadLobbies() {
     socket.emit('getLobbies', (lobbies) => {
-      const filter = input.value.toLowerCase();
-      const filtered = lobbies.filter(l => l.name.toLowerCase().includes(filter));
+      const filtered = lobbies.filter(l => l.name.toLowerCase().includes(input.value.toLowerCase()));
       listEl.innerHTML = filtered.length ? filtered.map(l => `
         <div class="lobby-item" data-id="${l.id}">
           <div><div class="name">${l.name}</div><div class="meta">${l.players}/${l.maxPlayers} игроков ${l.hasChat ? '· 💬' : ''}</div></div>
@@ -96,15 +100,13 @@ function renderSearchLobby() {
         el.onclick = () => {
           socket.emit('joinLobby', { lobbyId: el.dataset.id, user: currentUser }, (res) => {
             if (res.error) return alert(res.error);
-            currentLobby = res.lobby;
-            renderLobby();
+            currentLobby = res.lobby; renderLobby();
           });
         };
       });
     });
   }
-  loadLobbies();
-  input.oninput = loadLobbies;
+  loadLobbies(); input.oninput = loadLobbies;
   socket.off('lobbiesUpdated'); socket.on('lobbiesUpdated', loadLobbies);
 }
 
@@ -112,7 +114,7 @@ function renderCreateLobby() {
   app.innerHTML = `
     <div class="card" style="max-width:500px;margin:0 auto;">
       <h2><i class="fas fa-plus"></i> Создать лобби</h2>
-      <div style="margin-top:20px;"><label>Название лобби</label><input id="lobby-name" placeholder="Топчики" /></div>
+      <div style="margin-top:20px;"><label>Название лобби</label><input id="lobby-name" /></div>
       <div style="margin-top:16px;"><label>Макс. игроков (2-8)</label><input id="lobby-max" type="number" min="2" max="8" value="4" /></div>
       <div style="margin-top:16px;display:flex;align-items:center;gap:8px;">
         <input id="lobby-chat" type="checkbox" checked style="width:20px;height:20px;" />
@@ -130,11 +132,9 @@ function renderCreateLobby() {
     const maxPlayers = parseInt(document.getElementById('lobby-max').value);
     const hasChat = document.getElementById('lobby-chat').checked;
     if (!name) return alert('Введите название');
-    
     socket.emit('createLobby', { name, maxPlayers, hasChat, user: currentUser }, (res) => {
       if (res.error) return alert(res.error);
-      currentLobby = res.lobby;
-      renderLobby();
+      currentLobby = res.lobby; renderLobby();
     });
   };
 }
@@ -143,12 +143,11 @@ function renderLobby() {
   const isAdmin = currentLobby.adminId === currentUser.id;
   const adminClass = isAdmin ? 'admin' : '';
   
-  // Если игра запущена (статус не null)
   if (currentLobby.gameState) {
     if (currentLobby.gameState.status === 'menu') return renderGameMenu();
     if (currentLobby.gameState.status === 'creating') return renderGameCreating();
     if (currentLobby.gameState.status === 'guessing') return renderGameGuessing();
-    if (currentLobby.gameState.status === 'ended') return; // Ждем возврата
+    if (currentLobby.gameState.status === 'ended') return; 
   }
 
   app.innerHTML = `
@@ -179,21 +178,10 @@ function renderLobby() {
   `;
 
   document.getElementById('leave-btn').onclick = () => {
-    socket.emit('leaveLobby', { lobbyId: currentLobby.id }, () => {
-      currentLobby = null;
-      renderMainMenu();
-    });
+    socket.emit('leaveLobby', { lobbyId: currentLobby.id }, () => { currentLobby = null; renderMainMenu(); });
   };
-
-  if (isAdmin) {
-    document.getElementById('start-btn').onclick = () => {
-      socket.emit('openGameMenu', { lobbyId: currentLobby.id });
-    };
-  }
-
-  document.querySelectorAll('.player-item').forEach(el => {
-    el.onclick = () => openPlayerModal(el.dataset.id);
-  });
+  if (isAdmin) document.getElementById('start-btn').onclick = () => socket.emit('openGameMenu', { lobbyId: currentLobby.id });
+  document.querySelectorAll('.player-item').forEach(el => el.onclick = () => openPlayerModal(el.dataset.id));
 
   if (currentLobby.hasChat) {
     const chatMessages = document.getElementById('chat-messages');
@@ -205,15 +193,13 @@ function renderLobby() {
     renderMessages();
 
     document.getElementById('chat-send').onclick = () => {
-      const text = chatInput.value.trim();
-      if (!text) return;
+      const text = chatInput.value.trim(); if (!text) return;
       socket.emit('chatMessage', { lobbyId: currentLobby.id, user: currentUser, text }, () => chatInput.value = '');
     };
     chatInput.onkeydown = (e) => { if (e.key === 'Enter') document.getElementById('chat-send').click(); };
 
     socket.off('newMessage'); socket.on('newMessage', (msg) => {
-      currentLobby.chat.push(msg);
-      if (currentLobby.chat.length > 30) currentLobby.chat.shift();
+      currentLobby.chat.push(msg); if (currentLobby.chat.length > 30) currentLobby.chat.shift();
       renderMessages();
     });
   }
@@ -223,10 +209,7 @@ function renderPlayerList() {
   return currentLobby.players.map(p => `
     <div class="player-item" data-id="${p.id}">
       <div class="avatar">${renderAvatar(p)}</div>
-      <div class="info">
-        <div class="nick">${p.nickname} ${p.id === currentLobby.adminId ? '👑' : ''}</div>
-        <div class="login">@${p.login}</div>
-      </div>
+      <div class="info"><div class="nick">${p.nickname} ${p.id === currentLobby.adminId ? '👑' : ''}</div><div class="login">@${p.login}</div></div>
       <div class="elo"><i class="fas fa-trophy"></i> ${p.elo}</div>
     </div>
   `).join('');
@@ -237,11 +220,9 @@ function renderAvatar(user) {
   return `<i class="shape-${user.avatar}" style="font-style:normal;"></i>`;
 }
 
-// ================= МОДАЛКА ПРОФИЛЯ =================
 function openPlayerModal(targetId) {
   const target = currentLobby.players.find(p => p.id === targetId);
   if (!target) return;
-
   if (currentModal) currentModal.remove();
   const isAdmin = currentLobby.adminId === currentUser.id;
   const isMe = target.id === currentUser.id;
@@ -268,7 +249,6 @@ function openPlayerModal(targetId) {
       </div>` : ''}
     </div>
   `;
-
   overlay.querySelector('.close-btn').onclick = () => { overlay.remove(); currentModal = null; };
   
   if (isAdmin && !isMe) {
@@ -278,27 +258,16 @@ function openPlayerModal(targetId) {
         const labels = { kick: 'кикнуть', ban: 'забанить', admin: 'передать админку' };
         if (confirm(`Вы уверены, что хотите ${labels[action]} игрока ${target.nickname}?`)) {
           socket.emit('adminAction', { lobbyId: currentLobby.id, targetId: target.id, action: action === 'admin' ? 'transferAdmin' : action, adminId: currentUser.id }, (res) => {
-            if (res.error) alert(res.error);
-            overlay.remove();
-            currentModal = null;
+            if (res.error) alert(res.error); overlay.remove(); currentModal = null;
           });
         }
       };
     });
   }
-  document.body.appendChild(overlay);
-  currentModal = overlay;
+  document.body.appendChild(overlay); currentModal = overlay;
 }
 
-// ================= ИГРОВОЙ ИНТЕРФЕЙС =================
-
-const SHAPES = [
-  { id: 'circle', icon: 'fa-circle', color: '#3b82f6' }, // Синий
-  { id: 'square', icon: 'fa-square', color: '#ef4444' }, // Красный
-  { id: 'triangle', icon: 'fa-play', color: '#22c55e' }, // Зеленый (повернем)
-  { id: 'diamond', icon: 'fa-gem', color: '#eab308' },   // Желтый
-  { id: 'pentagon', icon: 'fa-star', color: '#a855f7' }  // Фиолетовый
-];
+// ================= ИГРА =================
 
 function renderGameMenu() {
   const isAdmin = currentLobby.adminId === currentUser.id;
@@ -320,50 +289,35 @@ function renderGameMenu() {
     </div>
   `;
   if (isAdmin) {
-    document.getElementById('back-btn').onclick = () => socket.emit('leaveGameMenu', { lobbyId: currentLobby.id });
-    document.getElementById('select-game-btn').onclick = () => {
-      socket.emit('selectGame', { lobbyId: currentLobby.id, gameId: 'sequence' });
-    };
+    document.getElementById('select-game-btn').onclick = () => socket.emit('selectGame', { lobbyId: currentLobby.id, gameId: 'sequence' });
+    document.getElementById('back-btn').onclick = () => socket.emit('openGameMenu', { lobbyId: currentLobby.id }); // Или добавить закрытие меню
   }
 }
 
 function renderGameCreating() {
   const gs = currentLobby.gameState;
   const isCreator = gs.creatorId === currentUser.id;
-  
-  // Очищаем старые таймеры при перерисовке
   animTimeouts.forEach(clearTimeout); animTimeouts = [];
 
   if (!isCreator) {
     app.innerHTML = `
       <div class="game-anim-container">
-        <h1 class="boom-text" id="boom-text">БУМ!</h1>
+        <h1 class="boom-text">БУМ!</h1>
         <h2 id="creator-text" style="opacity:0; transition:opacity 0.5s;">Выбирает ${gs.creatorName}</h2>
       </div>
     `;
-    setTimeout(() => document.getElementById('creator-text').style.opacity = 1, 500);
+    setTimeout(() => { const el = document.getElementById('creator-text'); if(el) el.style.opacity = 1; }, 500);
     return;
   }
 
-  // Если мы создатель
   app.innerHTML = `
     <div class="card game-screen">
-      <div class="game-header">
-        <h2>Ты Загадываешь!</h2>
-        <div class="timer" id="game-timer">15</div>
-      </div>
-      <div class="game-board">
-        ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}" data-index="${i}"></div>`).join('')}
-      </div>
-      <div class="game-shapes-bar">
-        ${SHAPES.map(s => `<div class="shape-btn" style="background:${s.color}" data-shape="${s.id}"><i class="fas ${s.icon}"></i></div>`).join('')}
-      </div>
-      <div style="margin-top:20px; text-align:center;">
-        <button class="primary" id="submit-seq-btn" style="font-size:20px; padding:15px 40px;" disabled>Загадать</button>
-      </div>
+      <div class="game-header"><h2>Ты Загадываешь!</h2><div class="timer" id="game-timer">15</div></div>
+      <div class="game-board">${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}" data-index="${i}"></div>`).join('')}</div>
+      <div class="game-shapes-bar">${SHAPES.map(s => `<div class="shape-btn" style="background:${s.color}" data-shape="${s.id}"><i class="fas ${s.icon}"></i></div>`).join('')}</div>
+      <div style="margin-top:20px; text-align:center;"><button class="primary" id="submit-seq-btn" style="font-size:20px; padding:15px 40px;" disabled>Загадать</button></div>
     </div>
   `;
-
   startGameLogic(gs, 'creator');
 }
 
@@ -375,44 +329,27 @@ function renderGameGuessing() {
     app.innerHTML = `
       <div class="card game-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px;">
         <h2 style="margin-bottom:20px;">Угадывает ${gs.guesserName}...</h2>
-        <div class="game-board">
-          ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}
-        </div>
+        <div class="game-board">${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}</div>
       </div>
     `;
-    // Отображаем текущий ввод угадывающего
     updateGameBoardVisual(gs.guess);
-    
-    // Слушаем обновления его действий
-    socket.off('gameStateUpdate');
-    socket.on('gameStateUpdate', (newGs) => {
+    socket.off('gameStateUpdate'); socket.on('gameStateUpdate', (newGs) => {
       if (newGs.status === 'guessing') updateGameBoardVisual(newGs.guess);
     });
     return;
   }
 
-  // Если мы угадываем
   app.innerHTML = `
     <div class="card game-screen">
-      <div class="game-header">
-        <h2>Ты Угадываешь! (Раунд ${gs.round})</h2>
-      </div>
-      <div class="game-board">
-        ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}" data-index="${i}"></div>`).join('')}
-      </div>
-      <div class="game-shapes-bar">
-        ${SHAPES.map(s => `<div class="shape-btn" style="background:${s.color}" data-shape="${s.id}"><i class="fas ${s.icon}"></i></div>`).join('')}
-      </div>
-      <div style="margin-top:20px; text-align:center;">
-        <button class="primary" id="submit-guess-btn" style="font-size:20px; padding:15px 40px;" disabled>Угадать</button>
-      </div>
+      <div class="game-header"><h2>Ты Угадываешь! (Раунд ${gs.round})</h2></div>
+      <div class="game-board">${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}" data-index="${i}"></div>`).join('')}</div>
+      <div class="game-shapes-bar">${SHAPES.map(s => `<div class="shape-btn" style="background:${s.color}" data-shape="${s.id}"><i class="fas ${s.icon}"></i></div>`).join('')}</div>
+      <div style="margin-top:20px; text-align:center;"><button class="primary" id="submit-guess-btn" style="font-size:20px; padding:15px 40px;" disabled>Угадать</button></div>
     </div>
   `;
-
   startGameLogic(gs, 'guesser');
 }
 
-// Общая логика кликов для загадывающего и угадывающего
 function startGameLogic(gs, role) {
   let selectedShape = null;
   let localArr = role === 'creator' ? gs.sequence : gs.guess;
@@ -422,7 +359,6 @@ function startGameLogic(gs, role) {
     const btn = document.getElementById(role === 'creator' ? 'submit-seq-btn' : 'submit-guess-btn');
     if (btn) btn.disabled = localArr.includes(null);
   };
-
   updateUI();
 
   document.querySelectorAll('.shape-btn').forEach(btn => {
@@ -439,26 +375,20 @@ function startGameLogic(gs, role) {
       if (gameCooldown) return;
       const index = parseInt(slot.dataset.index);
       
-      // Если в слоте есть фигура - убираем её
       if (localArr[index]) {
         gameCooldown = true;
         socket.emit('gameAction', { lobbyId: currentLobby.id, playerId: currentUser.id, action: 'remove', index, role }, () => {
-          localArr[index] = null;
-          updateUI();
-          setTimeout(() => gameCooldown = false, 200);
+          localArr[index] = null; updateUI(); setTimeout(() => gameCooldown = false, 200);
         });
         return;
       }
       
-      // Если выбрана фигура - ставим
       if (selectedShape) {
         gameCooldown = true;
         socket.emit('gameAction', { lobbyId: currentLobby.id, playerId: currentUser.id, action: 'place', index, shape: selectedShape, role }, () => {
-          localArr[index] = selectedShape;
-          selectedShape = null;
+          localArr[index] = selectedShape; selectedShape = null;
           document.querySelectorAll('.shape-btn').forEach(b => b.style.transform = 'scale(1)');
-          updateUI();
-          setTimeout(() => gameCooldown = false, 200);
+          updateUI(); setTimeout(() => gameCooldown = false, 200);
         });
       }
     };
@@ -468,28 +398,19 @@ function startGameLogic(gs, role) {
   if (submitBtn) {
     submitBtn.onclick = () => {
       submitBtn.disabled = true;
-      if (role === 'creator') {
-        socket.emit('submitSequence', { lobbyId: currentLobby.id, playerId: currentUser.id });
-      } else {
-        socket.emit('submitGuess', { lobbyId: currentLobby.id, playerId: currentUser.id });
-      }
+      if (role === 'creator') socket.emit('submitSequence', { lobbyId: currentLobby.id, playerId: currentUser.id });
+      else socket.emit('submitGuess', { lobbyId: currentLobby.id, playerId: currentUser.id });
     };
   }
 
-  // Обратный отсчет для загадывающего
   if (role === 'creator') {
     let time = 15;
     const timerEl = document.getElementById('game-timer');
     const interval = setInterval(() => {
-      time--;
-      if (timerEl) timerEl.innerText = time;
+      time--; if (timerEl) timerEl.innerText = time;
       if (time <= 0) {
         clearInterval(interval);
-        // Если не успел - принудительно отправляем (или кикаем из игры)
-        if (localArr.includes(null)) {
-          socket.emit('leaveLobby', { lobbyId: currentLobby.id }); // Выкидываем в главное меню
-          alert('Вы не успели загадать последовательность!');
-        }
+        if (localArr.includes(null)) { socket.emit('leaveLobby', { lobbyId: currentLobby.id }); alert('Вы не успели загадать!'); }
       }
     }, 1000);
     animTimeouts.push(interval);
@@ -503,102 +424,124 @@ function updateGameBoardVisual(arr) {
       if (shapeId) {
         const s = SHAPES.find(x => x.id === shapeId);
         slot.innerHTML = `<div class="shape-in-slot" style="background:${s.color}"><i class="fas ${s.icon}"></i></div>`;
-      } else {
-        slot.innerHTML = '';
-      }
+      } else slot.innerHTML = '';
     }
   });
 }
 
-// Слушатели результата
-socket.on('gameResult', ({ result, winnerName, sequence }) => {
-  if (!currentLobby || !currentLobby.gameState) return;
+// Обработчик результата хода (кто-то не угадал)
+socket.on('gameTurnResult', ({ result, nextGuesserName, guess }) => {
+  isShowingResult = true;
   
-  // Анимация результата
   app.innerHTML = `
-    <div class="card game-screen" style="background:transparent;box-shadow:none;">
-      <div class="game-board" id="result-board">
-        ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}
-      </div>
-      <h1 id="win-text" style="text-align:center;font-size:36px;margin-top:30px;opacity:0;transition:opacity 0.5s;color:var(--primary);">${winnerName ? 'ПОБЕДИЛ ' + winnerName : 'НИКТО НЕ ВЫИГРАЛ'}</h1>
-    </div>
-  `;
-
-  updateGameBoardVisual(sequence);
-  
-  // Красим слоты
-  result.forEach((color, i) => {
-    setTimeout(() => {
-      document.getElementById(`slot-${i}`).style.backgroundColor = 
-        color === 'green' ? 'var(--success)' : 
-        color === 'yellow' ? 'var(--warning)' : 'var(--danger)';
-      document.getElementById(`slot-${i}`).style.borderColor = 'transparent';
-    }, 100 + i * 100);
-  });
-
-  setTimeout(() => {
-    const wt = document.getElementById('win-text');
-    if (wt) wt.style.opacity = 1;
-  }, 1000);
-});
-
-socket.on('gameResultNext', ({ result, nextGuesserName, sequence }) => {
-  // Показываем результат хода, потом переходим к след.
-  app.innerHTML = `
-    <div class="card game-screen" style="background:transparent;box-shadow:none;">
+    <div class="card game-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:500px; background:transparent; box-shadow:none;">
       <div class="game-board">
         ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}
       </div>
+      
+      <!-- Панель с запоминанием хода -->
+      <div style="margin-top: 20px; padding: 16px; background: var(--surface); border-radius: 12px; border: 1px solid var(--surface-2);">
+        <div style="text-align:center; font-size:14px; color:var(--text-muted); margin-bottom:12px;">Твой выбор:</div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          ${guess.map(g => {
+            const s = SHAPES.find(x => x.id === g);
+            return `<div style="width:40px; height:40px; border-radius:8px; background:${s.color}; display:flex; align-items:center; justify-content:center; color:white; font-size:20px;"><i class="fas ${s.icon}"></i></div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <h2 style="margin-top: 30px; font-size: 20px; opacity:0; transition:opacity 0.5s;" id="next-turn-text">Следующий: <strong style="color:var(--primary);">${nextGuesserName}</strong></h2>
     </div>
   `;
-  updateGameBoardVisual(sequence);
+
+  // Красим квадраты
   result.forEach((color, i) => {
     setTimeout(() => {
       const sl = document.getElementById(`slot-${i}`);
-      sl.style.backgroundColor = color === 'green' ? 'var(--success)' : color === 'yellow' ? 'var(--warning)' : 'var(--danger)';
-      sl.style.borderColor = 'transparent';
+      if (sl) {
+        sl.style.backgroundColor = color === 'green' ? 'var(--success)' : color === 'yellow' ? 'var(--warning)' : 'var(--danger)';
+        sl.style.borderColor = 'transparent';
+        sl.innerHTML = ''; // Убираем фигуру, оставляем только цвет
+      }
     }, 100 + i * 100);
   });
 
   setTimeout(() => {
-    app.innerHTML = `<h1 style="text-align:center;">Угадывает ${nextGuesserName}...</h1>`;
+    const tt = document.getElementById('next-turn-text'); if(tt) tt.style.opacity = 1;
+  }, 600);
+
+  setTimeout(() => {
+    isShowingResult = false;
+    renderLobby(); // Возвращаем нормальный экран
   }, 5000);
+});
+
+// Обработчик конца игры (Победа/Проигрыш по раундам)
+socket.on('gameResult', ({ result, winnerName, sequence }) => {
+  isShowingResult = true;
+  
+  app.innerHTML = `
+    <div class="card game-screen" style="background:transparent;box-shadow:none; align-items:center; justify-content:center;">
+      <div class="game-board" id="result-board">
+        ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}
+      </div>
+      <h1 id="win-text" style="text-align:center;font-size:36px;margin-top:40px;opacity:0;transition:opacity 0.5s;color:var(--primary);">${winnerName ? 'ПОБЕДИЛ ' + winnerName : 'НИКТО НЕ ВЫИГРАЛ'}</h1>
+    </div>
+  `;
+
+  updateGameBoardVisual(sequence);
+  
+  result.forEach((color, i) => {
+    setTimeout(() => {
+      const sl = document.getElementById(`slot-${i}`);
+      if (sl) {
+        sl.style.backgroundColor = color === 'green' ? 'var(--success)' : color === 'yellow' ? 'var(--warning)' : 'var(--danger)';
+        sl.style.borderColor = 'transparent';
+      }
+    }, 100 + i * 100);
+  });
+
+  setTimeout(() => { const wt = document.getElementById('win-text'); if (wt) wt.style.opacity = 1; }, 1000);
+
+  setTimeout(() => {
+    isShowingResult = false;
+    renderLobby();
+  }, 4500);
 });
 
 socket.on('kickedPlayer', ({ targetId, lobbyId }) => {
   if (currentUser.id === targetId && currentLobby && currentLobby.id === lobbyId) {
-    currentLobby = null;
-    alert('Вас исключили из лобби!');
-    renderMainMenu();
+    currentLobby = null; alert('Вас исключили из лобби!'); renderMainMenu();
   }
 });
 
 socket.on('gameCancelled', ({ reason }) => {
-  currentLobby.gameState = null;
-  alert(reason);
-  renderLobby();
+  isShowingResult = false;
+  if (currentLobby) currentLobby.gameState = null;
+  alert(reason); renderLobby();
 });
 
-// Глобальный слушатель обновлений лобби
 socket.on('lobbyUpdated', (lobby) => {
   if (!currentLobby) return;
   const oldGs = currentLobby.gameState;
   currentLobby = lobby;
   const newGs = lobby.gameState;
-  
-  // Если мы в лобби
+
+  // Если мы сейчас смотрим результаты, не перебиваем экран
+  if (isShowingResult) {
+    if (!newGs) { isShowingResult = false; renderLobby(); }
+    return;
+  }
+
   if (document.querySelector('.lobby-screen') || (!newGs && !oldGs)) {
     renderLobby();
-  } 
-  // Если игра началась
-  else if (newGs && (!oldGs || oldGs.status !== newGs.status || oldGs.guesserId !== newGs.guesserId || oldGs.round !== newGs.round)) {
+  } else if (newGs && (!oldGs || oldGs.status !== newGs.status || oldGs.guesserId !== newGs.guesserId || oldGs.round !== newGs.round)) {
     if (newGs.status === 'menu') renderGameMenu();
     if (newGs.status === 'creating') renderGameCreating();
     if (newGs.status === 'guessing') renderGameGuessing();
   }
 });
 
-// Настройки (без изменений)
 function renderSettings() {
   app.innerHTML = `
     <div class="card" style="max-width:500px;margin:0 auto;">
@@ -623,24 +566,18 @@ function renderSettings() {
   `;
   document.getElementById('back-btn').onclick = renderMainMenu;
   document.getElementById('save-nickname').onclick = () => {
-    const newNick = document.getElementById('setting-nickname').value.trim();
-    if (!newNick) return alert('Введите никнейм');
+    const newNick = document.getElementById('setting-nickname').value.trim(); if (!newNick) return;
     socket.emit('updateNickname', { userId: currentUser.id, nickname: newNick }, (res) => {
-      if (res.error) return alert(res.error);
-      currentUser.nickname = newNick;
-      alert('Никнейм обновлён!');
-      renderMainMenu();
+      if (res.error) return alert(res.error); currentUser.nickname = newNick; renderMainMenu();
     });
   };
   const fileInput = document.getElementById('avatar-upload');
   document.getElementById('btn-upload-avatar').onclick = () => fileInput.click();
   fileInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
     compressImage(file, (base64) => {
       socket.emit('updateAvatar', { userId: currentUser.id, avatarUrl: base64 }, (res) => {
-        if (res.error) return alert(res.error);
-        currentUser.avatarUrl = base64;
+        if (res.error) return alert(res.error); currentUser.avatarUrl = base64;
         document.getElementById('settings-avatar-preview').innerHTML = renderAvatar(currentUser);
       });
     });
@@ -655,10 +592,8 @@ function compressImage(file, callback) {
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const MAX_SIZE = 128;
-      let width = img.width; let height = img.height;
+      const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+      const MAX_SIZE = 128; let width = img.width; let height = img.height;
       if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
       else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
       canvas.width = width; canvas.height = height;

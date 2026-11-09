@@ -63,7 +63,7 @@ function renderMainMenu() {
         <button class="menu-btn secondary" id="btn-create"><i class="fas fa-plus"></i> Создать лобби</button>
         <button class="menu-btn secondary" id="btn-settings"><i class="fas fa-cog"></i> Настройки</button>
       </div>
-      <div style="position:fixed; bottom:10px; left:15px; color:var(--text-muted); font-size:12px;">v0.2(wip)</div>
+      <div style="position:fixed; bottom:10px; left:15px; color:var(--text-muted); font-size:12px;">v0.3(wip)</div>
     </div>
   `;
   document.getElementById('btn-search').onclick = renderSearchLobby;
@@ -290,7 +290,6 @@ function renderGameMenu() {
   `;
   if (isAdmin) {
     document.getElementById('select-game-btn').onclick = () => socket.emit('selectGame', { lobbyId: currentLobby.id, gameId: 'sequence' });
-    document.getElementById('back-btn').onclick = () => socket.emit('openGameMenu', { lobbyId: currentLobby.id }); // Или добавить закрытие меню
   }
 }
 
@@ -429,7 +428,6 @@ function updateGameBoardVisual(arr) {
   });
 }
 
-// Обработчик результата хода (кто-то не угадал)
 socket.on('gameTurnResult', ({ result, nextGuesserName, guess }) => {
   isShowingResult = true;
   
@@ -439,7 +437,6 @@ socket.on('gameTurnResult', ({ result, nextGuesserName, guess }) => {
         ${[0,1,2,3,4].map(i => `<div class="game-slot" id="slot-${i}"></div>`).join('')}
       </div>
       
-      <!-- Панель с запоминанием хода -->
       <div style="margin-top: 20px; padding: 16px; background: var(--surface); border-radius: 12px; border: 1px solid var(--surface-2);">
         <div style="text-align:center; font-size:14px; color:var(--text-muted); margin-bottom:12px;">Твой выбор:</div>
         <div style="display:flex; gap:10px; justify-content:center;">
@@ -454,14 +451,13 @@ socket.on('gameTurnResult', ({ result, nextGuesserName, guess }) => {
     </div>
   `;
 
-  // Красим квадраты
   result.forEach((color, i) => {
     setTimeout(() => {
       const sl = document.getElementById(`slot-${i}`);
       if (sl) {
         sl.style.backgroundColor = color === 'green' ? 'var(--success)' : color === 'yellow' ? 'var(--warning)' : 'var(--danger)';
         sl.style.borderColor = 'transparent';
-        sl.innerHTML = ''; // Убираем фигуру, оставляем только цвет
+        sl.innerHTML = ''; 
       }
     }, 100 + i * 100);
   });
@@ -472,11 +468,10 @@ socket.on('gameTurnResult', ({ result, nextGuesserName, guess }) => {
 
   setTimeout(() => {
     isShowingResult = false;
-    renderLobby(); // Возвращаем нормальный экран
+    renderLobby(); 
   }, 5000);
 });
 
-// Обработчик конца игры (Победа/Проигрыш по раундам)
 socket.on('gameResult', ({ result, winnerName, sequence }) => {
   isShowingResult = true;
   
@@ -527,7 +522,6 @@ socket.on('lobbyUpdated', (lobby) => {
   currentLobby = lobby;
   const newGs = lobby.gameState;
 
-  // Если мы сейчас смотрим результаты, не перебиваем экран
   if (isShowingResult) {
     if (!newGs) { isShowingResult = false; renderLobby(); }
     return;
@@ -541,6 +535,8 @@ socket.on('lobbyUpdated', (lobby) => {
     if (newGs.status === 'guessing') renderGameGuessing();
   }
 });
+
+// ================= НАСТРОЙКИ И РЕДАКТОР ФОТО =================
 
 function renderSettings() {
   app.innerHTML = `
@@ -571,34 +567,179 @@ function renderSettings() {
       if (res.error) return alert(res.error); currentUser.nickname = newNick; renderMainMenu();
     });
   };
+  
   const fileInput = document.getElementById('avatar-upload');
   document.getElementById('btn-upload-avatar').onclick = () => fileInput.click();
+  
   fileInput.onchange = (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    compressImage(file, (base64) => {
+    const file = e.target.files[0]; 
+    if (!file) return;
+    // Вместо старого сжатия вызываем редактор
+    openAvatarEditor(file, (base64) => {
       socket.emit('updateAvatar', { userId: currentUser.id, avatarUrl: base64 }, (res) => {
-        if (res.error) return alert(res.error); currentUser.avatarUrl = base64;
+        if (res.error) return alert(res.error); 
+        currentUser.avatarUrl = base64;
         document.getElementById('settings-avatar-preview').innerHTML = renderAvatar(currentUser);
       });
     });
   };
+
   document.getElementById('logout-btn').onclick = () => {
     if (confirm('Выйти из аккаунта?')) { localStorage.removeItem('token'); window.location.reload(); }
   };
 }
 
-function compressImage(file, callback) {
+// ================= РЕДАКТОР АВАТАРОК (CROP) =================
+
+function openAvatarEditor(file, onSave) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-      const MAX_SIZE = 128; let width = img.width; let height = img.height;
-      if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-      else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-      canvas.width = width; canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
-      callback(canvas.toDataURL('image/jpeg', 0.8));
+      // Создаем UI редактора
+      const overlay = document.createElement('div');
+      overlay.className = 'avatar-editor-overlay';
+      overlay.innerHTML = `
+        <h2 style="margin-bottom:20px; font-size:18px;">Редактор аватарки</h2>
+        <div class="editor-crop-area" id="crop-area">
+          <img id="crop-image" src="${e.target.result}" />
+          <div class="editor-grid"></div>
+        </div>
+        <div class="editor-controls">
+          <i class="fas fa-search-minus" style="color:var(--text-muted)"></i>
+          <input type="range" id="zoom-range" min="1" max="4" step="0.01" value="1" />
+          <i class="fas fa-search-plus" style="color:var(--text-muted)"></i>
+        </div>
+        <div class="editor-buttons">
+          <button id="cancel-crop">Отмена</button>
+          <button id="save-crop" style="font-weight:700;">Готово</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const cropArea = document.getElementById('crop-area');
+      const cropImage = document.getElementById('crop-image');
+      const zoomRange = document.getElementById('zoom-range');
+      
+      const CROP_SIZE = 300; // Размер области обрезки
+      
+      let scale = 1;
+      let minScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let startX, startY, isDragging = false;
+
+      // Вычисляем базовый масштаб, чтобы картинка перекрывала круг
+      const imgRatio = img.width / img.height;
+      if (imgRatio > 1) {
+        // Широкая картинка (масштабируем по высоте)
+        cropImage.style.height = CROP_SIZE + 'px';
+        cropImage.style.width = 'auto';
+        minScale = CROP_SIZE / (img.width * (CROP_SIZE / img.height)); 
+        // Упростим: мы просто установим базовый размер через CSS, а canvas сам сделает кроп
+        cropImage.style.height = CROP_SIZE + 'px';
+        cropImage.style.width = (img.width * (CROP_SIZE / img.height)) + 'px';
+        minScale = 1;
+      } else {
+        // Высокая картинка (масштабируем по ширине)
+        cropImage.style.width = CROP_SIZE + 'px';
+        cropImage.style.height = 'auto';
+        cropImage.style.height = (img.height * (CROP_SIZE / img.width)) + 'px';
+        minScale = 1;
+      }
+
+      const updateTransform = () => {
+        // Центрируем при инициализации
+        if (translateX === 0 && translateY === 0) {
+           const w = cropImage.width; const h = cropImage.height;
+           translateX = (CROP_SIZE - w) / 2;
+           translateY = (CROP_SIZE - h) / 2;
+        }
+        
+        // Ограничиваем, чтобы картинка не вылезала за круг
+        const w = cropImage.width * scale;
+        const h = cropImage.height * scale;
+        
+        if (translateX > 0) translateX = 0;
+        if (translateY > 0) translateY = 0;
+        if (translateX < CROP_SIZE - w) translateX = CROP_SIZE - w;
+        if (translateY < CROP_SIZE - h) translateY = CROP_SIZE - h;
+
+        cropImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      };
+
+      // Инициализация позиции
+      setTimeout(updateTransform, 10);
+
+      // Зум
+      zoomRange.oninput = (e) => {
+        scale = parseFloat(e.target.value);
+        updateTransform();
+      };
+
+      // Перетаскивание мышкой
+      cropArea.onmousedown = (e) => {
+        e.preventDefault();
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+      };
+      window.onmousemove = (e) => {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+      };
+      window.onmouseup = () => { isDragging = false; };
+
+      // Перетаскивание пальцем (Touch)
+      cropArea.ontouchstart = (e) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          startX = e.touches[0].clientX - translateX;
+          startY = e.touches[0].clientY - translateY;
+        }
+      };
+      cropArea.ontouchmove = (e) => {
+        if (isDragging && e.touches.length === 1) {
+          e.preventDefault();
+          translateX = e.touches[0].clientX - startX;
+          translateY = e.touches[0].clientY - startY;
+          updateTransform();
+        }
+      };
+      cropArea.ontouchend = () => { isDragging = false; };
+
+      // Отмена
+      document.getElementById('cancel-crop').onclick = () => {
+        overlay.remove();
+        window.onmousemove = null; window.onmouseup = null;
+      };
+
+      // Сохранение (Рендер на Canvas)
+      document.getElementById('save-crop').onclick = () => {
+        // Увеличиваем разрешение до 256x256 для качества
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        // Рассчитываем, как картинка должна быть отрисована на канвасе
+        // (переносим логику CSS transform в Canvas API)
+        const outputSize = 256;
+        const ratio = outputSize / CROP_SIZE;
+        
+        ctx.translate(translateX * ratio, translateY * ratio);
+        ctx.scale(scale * ratio, scale * ratio);
+        ctx.drawImage(img, 0, 0, cropImage.width, cropImage.height);
+
+        // Конвертируем в Base64 с высоким качеством (0.9)
+        const base64 = canvas.toDataURL('image/jpeg', 0.9);
+        
+        overlay.remove();
+        window.onmousemove = null; window.onmouseup = null;
+        onSave(base64);
+      };
     };
     img.src = e.target.result;
   };

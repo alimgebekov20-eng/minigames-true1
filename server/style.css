@@ -205,3 +205,8 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .shape-diamond::before { content: '◆'; }
 .shape-hexagon::before { content: '⬡'; }
 .shape-star::before { content: '★'; }
+/* Кнопка выхода из аккаунта */
+#logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--danger);
+}

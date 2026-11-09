@@ -221,7 +221,7 @@ function sanitizeLobby(lobby) {
     maxPlayers: lobby.maxPlayers,
     hasChat: lobby.hasChat,
     adminId: lobby.adminId,
-    players: lobby.players.map(p => ({ id: p.id, login: p.login, nickname: p.nickname, elo: p.elo, avatar: p.avatar })),
+    players: lobby.players.map(p => ({ id: p.id, login: p.login, nickname: p.nickname, elo: p.elo, avatar: p.avatar, avatarUrl: p.avatarUrl })),
     chat: lobby.chat
   };
 }

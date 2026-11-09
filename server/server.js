@@ -5,12 +5,23 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// --- ЗАЩИТА ОТ ПАДЕНИЙ ---
+process.on('uncaughtException', (err) => {
+  console.error('КРИТИЧЕСКАЯ ОШИБКА (uncaughtException):', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Необработанный rejection:', reason);
+});
+// --------------------------
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(express.static(__dirname)); // Ищет файлы в папке server
-app.use(express.static(path.join(__dirname, '../client'))); // Ищет файлы в папке client
+// Health-check для RelaxDev
+app.get('/health', (req, res) => res.send('ok'));
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '../client')));
 
 const dbFile = path.join(__dirname, 'db.json');
 let db = { users: {}, lobbies: {} };
@@ -21,7 +32,11 @@ function loadDB() {
   }
 }
 function saveDB() {
-  fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+  try {
+    fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+  } catch (e) {
+    console.error('Ошибка записи в БД:', e);
+  }
 }
 loadDB();
 

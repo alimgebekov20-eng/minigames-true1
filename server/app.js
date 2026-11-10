@@ -25,27 +25,29 @@ const COLORS_SHOP = [
   { id: 'orange', name: 'Оранжевый', price: 75, css: 'color: #f97316; text-shadow: 0 0 5px #f97316' },
   { id: 'pink', name: 'Розовый', price: 75, css: 'color: #ec4899; text-shadow: 0 0 5px #ec4899' },
   { id: 'white', name: 'Белый', price: 75, css: 'color: #ffffff; text-shadow: 0 0 5px #ffffff' },
+  
   { id: 'rainbow', name: 'Радужный', price: 200, css: 'anim-rainbow' },
-  { id: 'darkpurple', name: 'Тьма', price: 300, css: 'anim-darkpurple' },
   { id: 'fire', name: 'Огонь', price: 300, css: 'anim-fire' },
   { id: 'ocean', name: 'Океан', price: 300, css: 'anim-ocean' },
   { id: 'acid', name: 'Кислота', price: 300, css: 'anim-acid' },
-  { id: 'gold', name: 'Золото', price: 300, css: 'anim-gold' },
   { id: 'matrix', name: 'Матрица', price: 300, css: 'anim-matrix' },
-  { id: 'legend1', name: 'Бог Грома (Легенда)', price: 1000, css: 'legend-passive-1', triggers: ['trigger-lightning', 'trigger-shake', 'trigger-glow'] },
-  { id: 'legend2', name: 'Космос (Легенда)', price: 1000, css: 'legend-passive-2', triggers: ['trigger-stars', 'trigger-warp', 'trigger-blackhole'] },
-  { id: 'mythic', name: 'Сингулярность (Миф)', price: 5000, css: 'mythic-passive', triggers: ['trigger-supernova', 'trigger-glitch', 'trigger-matrix-rain', 'trigger-blood', 'trigger-angel'] }
+  { id: 'darkpurple', name: 'Тьма', price: 300, css: 'anim-darkpurple' },
+  { id: 'gold', name: 'Золото', price: 300, css: 'anim-gold' },
+  
+  { id: 'legend1', name: 'Бог Грома', price: 1000, css: 'legend-lightning' },
+  { id: 'legend2', name: 'Космос', price: 1000, css: 'legend-space' },
+  
+  { id: 'mythic', name: 'Сингулярность', price: 5000, css: 'mythic-singularity' }
 ];
 
 let ownedColors = ['default'];
-let colorTriggerInterval = null;
 
 function init() {
   const savedToken = localStorage.getItem('token');
   if (savedToken) {
     socket.emit('login', { token: savedToken }, (res) => {
       if (res.error) { localStorage.removeItem('token'); renderAuth(); } 
-      else { currentUser = res.user; renderMainMenu(); startNameColorEngine(); }
+      else { currentUser = res.user; renderMainMenu(); }
     });
   } else { renderAuth(); }
 }
@@ -57,7 +59,7 @@ function getColorClass(colorId) {
 
 function formatName(user) {
   const cssClass = getColorClass(user.nameColor || 'default');
-  if (cssClass.includes('anim-') || cssClass.includes('passive')) {
+  if (cssClass.startsWith('anim-') || cssClass.startsWith('legend-') || cssClass.startsWith('mythic-')) {
     return `<span class="${cssClass}">${user.nickname}</span>`;
   }
   return `<span style="${cssClass}">${user.nickname}</span>`;
@@ -68,41 +70,6 @@ function renderAvatar(user) {
   return `<i class="shape-${user.avatar || 'circle'}" style="font-style:normal;"></i>`;
 }
 
-// Движок анимаций
-function startNameColorEngine() {
-  if (colorTriggerInterval) clearInterval(colorTriggerInterval);
-  
-  function scheduleNext() {
-    const delay = Math.floor(Math.random() * 20000) + 25000;
-    colorTriggerInterval = setTimeout(() => {
-      playRandomTrigger();
-      scheduleNext();
-    }, delay);
-  }
-
-  function playRandomTrigger() {
-    const colorData = COLORS_SHOP.find(x => x.id === (currentUser?.nameColor || 'default'));
-    if (!colorData || !colorData.triggers || colorData.triggers.length === 0) return;
-
-    const elements = document.querySelectorAll('.dynamic-name');
-    if (elements.length === 0) return;
-
-    const randomTrigger = colorData.triggers[Math.floor(Math.random() * colorData.triggers.length)];
-
-    elements.forEach(el => {
-      el.classList.remove(colorData.css);
-      el.classList.add(randomTrigger);
-      
-      setTimeout(() => {
-        el.classList.remove(randomTrigger);
-        el.classList.add(colorData.css);
-      }, 3000);
-    });
-  }
-  scheduleNext();
-}
-
-// Конфети
 function launchConfetti() {
   const canvas = document.createElement('canvas');
   canvas.style.position = 'fixed';
@@ -135,32 +102,19 @@ function launchConfetti() {
   function animate() {
     ctx.clearRect(0, 0, width, height);
     let active = false;
-
     particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.4; 
-      p.vx *= 0.99; 
-      p.rotation += p.rotSpeed;
-
+      p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.vx *= 0.99; p.rotation += p.rotSpeed;
       if (p.y < height + 50) {
         active = true;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation * Math.PI / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation * Math.PI / 180);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
       }
     });
-
     if (active) requestAnimationFrame(animate);
     else canvas.remove();
   }
   animate();
 }
-
-// --- ЭКРАНЫ ---
 
 function renderAuth() {
   app.innerHTML = `
@@ -178,7 +132,7 @@ function renderAuth() {
     socket.emit('register', { login, nickname }, (res) => {
       if (res.error) return alert(res.error);
       localStorage.setItem('token', res.token);
-      currentUser = res.user; renderMainMenu(); startNameColorEngine();
+      currentUser = res.user; renderMainMenu();
     });
   };
 }
@@ -189,6 +143,7 @@ function renderMainMenu() {
       <div class="top-bar">
         <div class="avatar">${renderAvatar(currentUser)}</div>
         <div class="info">
+          <button class="shop-btn-top" id="btn-shop-main"><i class="fas fa-palette"></i> Магазин цветов</button>
           <div class="name">${formatName(currentUser)}</div>
           <div class="login">@${currentUser.login}</div>
         </div>
@@ -200,13 +155,14 @@ function renderMainMenu() {
         <button class="menu-btn secondary" id="btn-leaderboard"><i class="fas fa-crown"></i> Списки лидеров</button>
         <button class="menu-btn secondary" id="btn-settings"><i class="fas fa-cog"></i> Настройки</button>
       </div>
-      <div style="position:fixed; bottom:10px; left:15px; color:var(--text-muted); font-size:12px;">v0.4(wip)</div>
+      <div style="position:fixed; bottom:10px; left:15px; color:var(--text-muted); font-size:12px;">v0.5(wip)</div>
     </div>
   `;
   document.getElementById('btn-search').onclick = renderSearchLobby;
   document.getElementById('btn-create').onclick = renderCreateLobby;
   document.getElementById('btn-leaderboard').onclick = renderLeaderboard;
   document.getElementById('btn-settings').onclick = renderSettings;
+  document.getElementById('btn-shop-main').onclick = renderShop;
 }
 
 function renderLeaderboard() {
@@ -746,14 +702,10 @@ function renderSettings() {
         <input id="setting-nickname" value="${currentUser.nickname}" />
         <button class="primary" id="save-nickname" style="margin-top:12px;width:100%;">Сохранить никнейм</button>
       </div>
-      <div style="margin-top:24px;">
-        <button class="primary" id="btn-shop" style="width:100%; background:linear-gradient(90deg, #a855f7, #3b82f6);"><i class="fas fa-palette"></i> Магазин цветов (${currentUser.elo} ELO)</button>
-      </div>
       <button class="secondary" id="logout-btn" style="margin-top:32px; width:100%; color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Выйти из аккаунта</button>
     </div>
   `;
   document.getElementById('back-btn').onclick = renderMainMenu;
-  document.getElementById('btn-shop').onclick = renderShop;
   
   document.getElementById('save-nickname').onclick = () => {
     const newNick = document.getElementById('setting-nickname').value.trim(); if (!newNick) return;
@@ -786,17 +738,21 @@ function renderShop() {
         <button class="secondary" id="back-btn"><i class="fas fa-arrow-left"></i> Назад</button>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:var(--surface-2); padding:12px; border-radius:8px;">
-        <div>Твое ЭЛО: <strong style="color:var(--primary);font-size:18px;">${currentUser.elo}</strong></div>
+        <div>Твое ЭЛО: <strong id="shop-elo-display" style="color:var(--primary);font-size:18px;">${currentUser.elo}</strong></div>
         <button class="danger" id="dev-unlock" style="padding:6px 12px; font-size:12px;">[DEV] Открыть всё (+10000 ELO)</button>
       </div>
       <div class="shop-grid" id="shop-grid"></div>
     </div>
   `;
-  document.getElementById('back-btn').onclick = renderSettings;
+  document.getElementById('back-btn').onclick = renderMainMenu;
   
   document.getElementById('dev-unlock').onclick = () => {
     socket.emit('devUnlockAll', { userId: currentUser.id }, (res) => {
-      if (res.success) { currentUser.elo = res.newElo; renderShop(); }
+      if (res.success) { 
+        currentUser.elo = res.newElo; 
+        document.getElementById('shop-elo-display').innerText = currentUser.elo;
+        drawShop(); 
+      }
     });
   };
 
@@ -807,7 +763,7 @@ function renderShop() {
       const isOwned = ownedColors.includes(c.id) || c.id === 'default' || currentUser.elo >= 9000;
       const isEquipped = (currentUser.nameColor || 'default') === c.id;
       
-      const cssClass = c.css.includes('anim-') || c.css.includes('passive') ? c.css : '';
+      const cssClass = c.css.includes('anim-') || c.css.includes('legend-') || c.css.includes('mythic-') ? c.css : '';
       const style = cssClass ? '' : c.css;
 
       return `
@@ -830,11 +786,15 @@ function renderShop() {
     if (confirm('Купить цвет за ' + price + ' ELO?')) {
       socket.emit('buyColor', { userId: currentUser.id, colorId: id, price }, (res) => {
         if (res.error) return alert(res.error);
+        
         currentUser.elo = res.newElo;
         currentUser.nameColor = id;
         if (!ownedColors.includes(id)) ownedColors.push(id);
+        
+        const eloDisplay = document.getElementById('shop-elo-display');
+        if (eloDisplay) eloDisplay.innerText = currentUser.elo;
+        
         drawShop();
-        startNameColorEngine();
       });
     }
   };
@@ -844,14 +804,12 @@ function renderShop() {
       if (res.error) return alert(res.error);
       currentUser.nameColor = id;
       drawShop();
-      startNameColorEngine();
     });
   };
 
   drawShop();
 }
 
-// Редактор фото
 function openAvatarEditor(file, onSave) {
   const reader = new FileReader();
   reader.onload = (e) => {

@@ -75,10 +75,21 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .top-bar { display: flex; align-items: center; gap: 16px; padding: 16px 24px; background: var(--surface); border-radius: var(--radius); }
 .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden; flex-shrink: 0; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.top-bar .info { flex: 1; }
+.top-bar .info { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
 .top-bar .info .name { font-size: 18px; font-weight: 700; }
 .top-bar .info .login { font-size: 13px; color: var(--text-muted); }
 .top-bar .elo { font-size: 16px; font-weight: 700; color: var(--primary); }
+
+/* Кнопка магазина в меню */
+.shop-btn-top {
+  background: transparent; border: none;
+  color: #a855f7; font-size: 13px; font-weight: 700;
+  padding: 0; margin-bottom: 4px; cursor: pointer;
+  transition: color 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.shop-btn-top:hover { color: #d8b4fe; }
+
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
 .menu-btn { flex-direction: column; padding: 32px 16px; font-size: 18px; background: var(--surface); border: 1px solid var(--surface-2); color: var(--text); }
 .menu-btn:hover { background: var(--surface-2); border-color: var(--primary); }
@@ -173,7 +184,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 .timer { font-size: 24px; font-weight: 800; color: var(--danger); background: rgba(239,68,68,0.1); padding: 8px 16px; border-radius: 8px; }
 
-/* Квадраты по центру (ОПТИМИЗИРОВАНО) */
+/* Квадраты по центру */
 .game-board { display: flex; gap: clamp(6px, 2vw, 16px); justify-content: center; margin-bottom: 50px; flex-wrap: nowrap; }
 .game-slot { 
   width: clamp(45px, 15vw, 80px); 
@@ -191,7 +202,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 }
 @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
 
-/* Панель с фигурами снизу (ОПТИМИЗИРОВАНО) */
+/* Панель с фигурами снизу */
 .game-shapes-bar { display: flex; gap: clamp(8px, 3vw, 20px); justify-content: center; }
 .shape-btn { 
   width: clamp(45px, 12vw, 64px); 
@@ -202,120 +213,185 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 }
 .shape-btn:hover { transform: scale(1.15); }
 
+/* ============ РЕДАКТОР АВАТАРОК ============ */
+.avatar-editor-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  z-index: 2000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.editor-crop-area {
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 0 4px var(--surface-2), 0 10px 30px rgba(0,0,0,0.5);
+  cursor: grab;
+  touch-action: none;
+}
+.editor-crop-area:active { cursor: grabbing; }
+
+.editor-crop-area img {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.editor-grid {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 33.33% 33.33%;
+  background-position: center;
+}
+
+.editor-controls {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+.editor-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+.editor-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+}
+.editor-buttons button {
+  background: none;
+  color: var(--primary);
+  font-size: 16px;
+  padding: 10px 20px;
+}
+.editor-buttons button:hover { background: var(--surface-2); }
+
 /* ========================================= */
 /* ========= АНИМАЦИИ НИКНЕЙМОВ ============ */
 /* ========================================= */
 
-/* Базовые */
-.color-red { color: #ef4444; text-shadow: 0 0 5px #ef4444; }
-.color-green { color: #22c55e; text-shadow: 0 0 5px #22c55e; }
-.color-blue { color: #3b82f6; text-shadow: 0 0 5px #3b82f6; }
-.color-yellow { color: #eab308; text-shadow: 0 0 5px #eab308; }
-.color-orange { color: #f97316; text-shadow: 0 0 5px #f97316; }
-.color-pink { color: #ec4899; text-shadow: 0 0 5px #ec4899; }
-.color-white { color: #ffffff; text-shadow: 0 0 5px #ffffff; }
-
-/* Анимированные */
+/* Радужный */
 .anim-rainbow {
   background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444);
   background-size: 200% 100%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 3s linear infinite;
-}
-@keyframes animGradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-.anim-darkpurple {
-  background: linear-gradient(90deg, #000000, #6b21a8, #000000);
-  background-size: 200% 100%;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 4s linear infinite;
+  animation: shiftBg 3s linear infinite;
 }
 
+/* Огонь */
 .anim-fire {
-  background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #ff8800, #ff0000);
-  background-size: 200% 100%;
+  background: linear-gradient(0deg, #ff0000, #ff8800, #ffff00, #ff8800, #ff0000);
+  background-size: 100% 200%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 2s linear infinite;
+  animation: shiftBgY 1.5s ease-in-out infinite alternate;
 }
 
+/* Океан */
 .anim-ocean {
-  background: linear-gradient(90deg, #0000ff, #00ffff, #0000ff);
-  background-size: 200% 100%;
+  background: linear-gradient(45deg, #0000ff, #00ffff, #0000ff, #00ffff);
+  background-size: 300% 300%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 5s linear infinite;
+  animation: shiftBg 4s linear infinite;
 }
 
+/* Кислота */
 .anim-acid {
-  background: linear-gradient(90deg, #aaff00, #00ff00, #aaff00);
-  background-size: 200% 100%;
+  background: linear-gradient(90deg, #aaff00, #00ff00, #aaff00, #00ff00);
+  background-size: 300% 100%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 1.5s linear infinite;
+  animation: shiftBg 0.8s steps(4) infinite;
 }
 
-.anim-gold {
-  background: linear-gradient(90deg, #ffd700, #ffaa00, #ffd700);
-  background-size: 200% 100%;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 3s linear infinite;
-}
-
+/* Матрица */
 .anim-matrix {
-  background: linear-gradient(90deg, #00ff00, #000000, #00ff00);
+  background: linear-gradient(180deg, #00ff00, #003300, #00ff00);
+  background-size: 100% 200%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: shiftBgY 2s linear infinite;
+}
+
+/* Тьма */
+.anim-darkpurple {
+  background: linear-gradient(90deg, #000000, #6b21a8, #000000, #6b21a8, #000000);
+  background-size: 400% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: shiftBg 4s ease-in-out infinite;
+}
+
+/* Золото */
+.anim-gold {
+  background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
   background-size: 200% 100%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 2s linear infinite;
+  animation: shiftBg 2s linear infinite;
 }
 
 /* Легендарные (Пассивки) */
-.legend-passive-1 {
-  background: linear-gradient(90deg, #00ffff, #ffffff, #00ffff);
-  background-size: 200% 100%;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 2s linear infinite;
-  filter: drop-shadow(0 0 5px #00ffff);
+.legend-lightning {
+  color: #fff;
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #0000ff;
+  animation: flash 1.5s infinite alternate;
 }
-.legend-passive-2 {
-  background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
-  background-size: 200% 100%;
+.legend-space {
+  background: radial-gradient(circle, #fff, #a855f7, #000000);
+  background-size: 200% 200%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 3s linear infinite;
-  filter: drop-shadow(0 0 8px #ff00ff);
-}
-.mythic-passive {
-  background: linear-gradient(90deg, #ff0000, #ff00ff, #00ffff, #ff0000);
-  background-size: 300% 100%;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: animGradient 1s linear infinite;
-  filter: drop-shadow(0 0 10px #ff00ff);
+  animation: shiftBg 5s ease-in-out infinite;
 }
 
-/* Триггеры (временные анимации) */
-.trigger-lightning { animation: shake 0.2s infinite; color: #fff; text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; }
-.trigger-shake { animation: shake 0.1s infinite; color: #ef4444; text-shadow: 0 0 20px #ef4444; }
-.trigger-glow { color: #fff; text-shadow: 0 0 20px #fff, 0 0 40px #fff; }
-@keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+/* Мифическая Сингулярность */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.mythic-singularity {
+  background: conic-gradient(from var(--angle), #ff0000, #ff00ff, #00ffff, #ff0000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: mythicSpin 2s infinite;
+}
 
-.trigger-stars { color: #ffd700; text-shadow: 0 0 10px #ffd700, 0 0 20px #fff; }
-.trigger-warp { transform: scaleX(2); opacity: 0.8; transition: all 0.5s; }
-.trigger-blackhole { color: transparent; text-shadow: 0 0 20px #000; }
-.trigger-supernova { color: #fff; text-shadow: 0 0 30px #fff, 0 0 50px #ff00ff; transform: scale(1.2); transition: all 0.5s; }
-.trigger-glitch { animation: glitch 0.2s infinite; }
-@keyframes glitch { 0% { transform: translate(0) } 20% { transform: translate(-2px, 2px) } 40% { transform: translate(-2px, -2px) } 60% { transform: translate(2px, 2px) } 80% { transform: translate(2px, -2px) } 100% { transform: translate(0) } }
-.trigger-matrix-rain { color: #0f0; text-shadow: 0 0 10px #0f0; }
-.trigger-blood { color: #f00; text-shadow: 0 0 20px #f00, 0 0 40px #f00; font-weight: 900; }
-.trigger-angel { color: #fff; text-shadow: 0 0 20px #fff, 0 0 40px #ffd700; transform: translateY(-5px); transition: all 0.5s; }
+@keyframes shiftBg { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes shiftBgY { 0% { background-position: 50% 0%; } 100% { background-position: 50% 200%; } }
+@keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 1; } }
 
-/* --- МОБИЛЬНАЯ ОПТИМИЗАЦИЯ (МЕДИА-ЗАПРОСЫ) --- */
+/* Анимация Сингулярности */
+@keyframes mythicSpin {
+  0% { --angle: 0deg; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  20% { --angle: 360deg; animation-timing-function: linear; }
+  35% { --angle: 1800deg; animation-timing-function: linear; }
+  85% { --angle: 2160deg; }
+  100% { --angle: 2160deg; }
+}
+
+/* --- МОБИЛЬНАЯ ОПТИМИЗАЦИЯ --- */
 @media (max-width: 768px) {
   #app { padding: 10px; }
   .lobby-body { flex-direction: column; }
   .chat-panel { max-height: 250px; margin-top: 20px; }
   .game-screen { padding: 16px; min-height: 400px; }
   .game-header { margin-bottom: 20px; }
-  .top-bar { padding: 12px; }
+  .top-bar { padding: 12px; gap: 10px; }
   .top-bar .info .name { font-size: 16px; }
   .modal { width: 95%; padding: 16px; }
   .bottom-bar { flex-direction: column; }
   .admin .leave-btn { flex: 1; width: 100%; }
   .admin .start-btn { flex: 1; width: 100%; }
+  .shop-btn-top { font-size: 11px; margin-bottom: 2px; }
 }

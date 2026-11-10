@@ -57,7 +57,6 @@ function getColorClass(colorId) {
   return c ? c.css : '';
 }
 
-// ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ МИФИЧЕСКОГО ЦВЕТА
 function formatName(user) {
   const cssClass = getColorClass(user.nameColor || 'default');
   

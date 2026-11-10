@@ -80,7 +80,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .top-bar .info .login { font-size: 13px; color: var(--text-muted); }
 .top-bar .elo { font-size: 16px; font-weight: 700; color: var(--primary); }
 
-/* Кнопка магазина в меню */
 .shop-btn-top {
   background: transparent; border: none;
   color: #a855f7; font-size: 13px; font-weight: 700;
@@ -164,7 +163,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .game-info { padding: 16px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
 .game-name { font-size: 18px; font-weight: 700; }
 
-/* Анимация старта с конфети */
 .game-anim-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; text-align:center; z-index:10; }
 .game-title-anim { 
   font-size: clamp(24px, 6vw, 48px); 
@@ -179,12 +177,10 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Игровое поле */
 .game-screen { display: flex; flex-direction: column; min-height: 500px; background: var(--surface); border-radius: var(--radius); padding: 32px; }
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 .timer { font-size: 24px; font-weight: 800; color: var(--danger); background: rgba(239,68,68,0.1); padding: 8px 16px; border-radius: 8px; }
 
-/* Квадраты по центру */
 .game-board { display: flex; gap: clamp(6px, 2vw, 16px); justify-content: center; margin-bottom: 50px; flex-wrap: nowrap; }
 .game-slot { 
   width: clamp(45px, 15vw, 80px); 
@@ -202,7 +198,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 }
 @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
 
-/* Панель с фигурами снизу */
 .game-shapes-bar { display: flex; gap: clamp(8px, 3vw, 20px); justify-content: center; }
 .shape-btn { 
   width: clamp(45px, 12vw, 64px); 
@@ -285,7 +280,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 /* ========= АНИМАЦИИ НИКНЕЙМОВ ============ */
 /* ========================================= */
 
-/* Радужный */
 .anim-rainbow {
   background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444);
   background-size: 200% 100%;
@@ -293,7 +287,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 3s linear infinite;
 }
 
-/* Огонь */
 .anim-fire {
   background: linear-gradient(0deg, #ff0000, #ff8800, #ffff00, #ff8800, #ff0000);
   background-size: 100% 200%;
@@ -301,7 +294,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBgY 1.5s ease-in-out infinite alternate;
 }
 
-/* Океан */
 .anim-ocean {
   background: linear-gradient(45deg, #0000ff, #00ffff, #0000ff, #00ffff);
   background-size: 300% 300%;
@@ -309,7 +301,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 4s linear infinite;
 }
 
-/* Кислота */
 .anim-acid {
   background: linear-gradient(90deg, #aaff00, #00ff00, #aaff00, #00ff00);
   background-size: 300% 100%;
@@ -317,7 +308,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 0.8s steps(4) infinite;
 }
 
-/* Матрица */
 .anim-matrix {
   background: linear-gradient(180deg, #00ff00, #003300, #00ff00);
   background-size: 100% 200%;
@@ -325,7 +315,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBgY 2s linear infinite;
 }
 
-/* Тьма */
 .anim-darkpurple {
   background: linear-gradient(90deg, #000000, #6b21a8, #000000, #6b21a8, #000000);
   background-size: 400% 100%;
@@ -333,7 +322,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 4s ease-in-out infinite;
 }
 
-/* Золото */
 .anim-gold {
   background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
   background-size: 200% 100%;
@@ -341,7 +329,6 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 2s linear infinite;
 }
 
-/* Легендарные (Пассивки) */
 .legend-lightning {
   color: #fff;
   text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #0000ff;
@@ -354,30 +341,139 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   animation: shiftBg 5s ease-in-out infinite;
 }
 
-/* Мифическая Сингулярность */
+@keyframes shiftBg { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes shiftBgY { 0% { background-position: 50% 0%; } 100% { background-position: 50% 200%; } }
+@keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 1; } }
+
+
+/* ===== МИФИЧЕСКАЯ СИНГУЛЯРНОСТЬ (ПОЛНАЯ ПЕРЕРАБОТКА) ===== */
+.mythic-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible !important; /* Черная дыра может выходить за рамки */
+}
+
+.mythic-text {
+  position: relative;
+  z-index: 2;
+  font-weight: 900;
+  
+  /* База: черный центр, вокруг цвет */
+  background: 
+    radial-gradient(circle at center, #000 15%, transparent 40%),
+    conic-gradient(from var(--angle), #ff00ff, #00ffff, #ffff00, #ff0000, #ff00ff);
+  background-size: 200% 200%;
+  background-position: center;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Анимация: вращение и втягивание */
+  animation: 
+    spinColors 0.25s linear infinite,
+    suckColors 4s infinite;
+}
+
+/* Объект "Черная дыра" (не привязан к тексту) */
+.black-hole {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 150%; 
+  height: 150%;
+  background: radial-gradient(circle, #fff 10%, #ffff00 30%, #ff8800 60%, transparent 80%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: 0 0 10px #ffff00, 0 0 20px #ff8800;
+  mix-blend-mode: screen;
+  
+  animation: blackHoleCycle 4s infinite;
+}
+
 @property --angle {
   syntax: '<angle>';
   initial-value: 0deg;
   inherits: false;
 }
-.mythic-singularity {
-  background: conic-gradient(from var(--angle), #ff0000, #ff00ff, #00ffff, #ff0000);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: mythicSpin 2s infinite;
+
+@keyframes spinColors {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
 }
 
-@keyframes shiftBg { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-@keyframes shiftBgY { 0% { background-position: 50% 0%; } 100% { background-position: 50% 200%; } }
-@keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 1; } }
+/* Тайминг (4 секунды на цикл):
+   0% - 25% (1 сек): Текст крутится.
+   25% - 37.5% (0.5 сек): Черная дыра появляется и втягивает цвет.
+   37.5% - 50% (0.5 сек): Дыра схлопывается по X.
+   50% - 87.5% (1.5 сек): Пауза (держим форму).
+   87.5% - 100% (0.5 сек): Цвета расползаются обратно.
+*/
 
-/* Анимация Сингулярности */
-@keyframes mythicSpin {
-  0% { --angle: 0deg; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  20% { --angle: 360deg; animation-timing-function: linear; }
-  35% { --angle: 1800deg; animation-timing-function: linear; }
-  85% { --angle: 2160deg; }
-  100% { --angle: 2160deg; }
+@keyframes suckColors {
+  0%, 25% {
+    background-size: 200% 200%;
+    -webkit-text-fill-color: transparent;
+  }
+  25.1% {
+    /* В этот момент дыра появляется, начинаем втягивание */
+    background-size: 200% 200%;
+  }
+  37.5% {
+    /* Цвета втянуты в центр, текст оставляет черный след */
+    background-size: 0% 0%;
+    -webkit-text-fill-color: #000;
+  }
+  87.5% {
+    background-size: 0% 0%;
+    -webkit-text-fill-color: #000;
+  }
+  87.6% {
+    /* Начинаем расползаться обратно */
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+  }
+  100% {
+    background-size: 200% 200%;
+  }
+}
+
+@keyframes blackHoleCycle {
+  0%, 25% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  25.1% {
+    /* БАМ! Резкое появление */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  37.5% {
+    /* Растет и закручивает в себя цвета */
+    transform: translate(-50%, -50%) scale(1.5) rotate(720deg);
+    opacity: 1;
+  }
+  50% {
+    /* Резко схлопывается по X, Y остается на месте */
+    transform: translate(-50%, -50%) scaleX(0) scaleY(1.5) rotate(1080deg);
+    opacity: 1;
+  }
+  87.5% {
+    /* Висит схлопнутой, ждем */
+    transform: translate(-50%, -50%) scaleX(0) scaleY(1.5) rotate(1080deg);
+    opacity: 1;
+  }
+  87.6% {
+    /* Исчезает, пока цвета возвращаются */
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
 }
 
 /* --- МОБИЛЬНАЯ ОПТИМИЗАЦИЯ --- */

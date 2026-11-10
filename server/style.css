@@ -66,138 +66,77 @@ input, select {
   outline: none;
 }
 input:focus, select:focus { border-color: var(--primary); }
-
 label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-muted); }
 
-/* Экран входа */
+/* --- ВЕРХНЕЕ МЕНЮ И ЛОББИ --- */
 .auth-screen { display: flex; flex-direction: column; gap: 16px; max-width: 400px; margin: 0 auto; }
 .auth-screen h1 { text-align: center; margin-bottom: 8px; }
-
-/* Главное меню */
 .main-menu { display: flex; flex-direction: column; gap: 24px; }
-.top-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
-  background: var(--surface);
-  border-radius: var(--radius);
-}
-.avatar {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  background: var(--surface-2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
+.top-bar { display: flex; align-items: center; gap: 16px; padding: 16px 24px; background: var(--surface); border-radius: var(--radius); }
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden; flex-shrink: 0; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .top-bar .info { flex: 1; }
 .top-bar .info .name { font-size: 18px; font-weight: 700; }
 .top-bar .info .login { font-size: 13px; color: var(--text-muted); }
 .top-bar .elo { font-size: 16px; font-weight: 700; color: var(--primary); }
-
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-.menu-btn {
-  flex-direction: column;
-  padding: 32px 16px;
-  font-size: 18px;
-  background: var(--surface);
-  border: 1px solid var(--surface-2);
-  color: var(--text);
-}
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.menu-btn { flex-direction: column; padding: 32px 16px; font-size: 18px; background: var(--surface); border: 1px solid var(--surface-2); color: var(--text); }
 .menu-btn:hover { background: var(--surface-2); border-color: var(--primary); }
 .menu-btn i { font-size: 32px; margin-bottom: 12px; color: var(--primary); }
 
-/* Список лобби */
-.lobby-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px; }
-.lobby-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background: var(--surface-2);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
+/* --- СПИСКИ ЛИДЕРОВ --- */
+.leaderboard-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; padding-right: 8px; margin-bottom: 20px; }
+.lb-item { display: flex; align-items: center; padding: 12px; background: var(--surface-2); border-radius: 8px; }
+.lb-item.is-me { border: 2px solid #eab308; background: rgba(234, 179, 8, 0.1); }
+.my-place-card {
+  display: flex; align-items: center; padding: 16px 20px;
+  background: var(--surface); border: 2px solid #eab308; border-radius: var(--radius);
+  box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3);
+  position: sticky; bottom: 0;
 }
-.lobby-item:hover { background: #475569; }
-.lobby-item .name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-.lobby-item .meta { font-size: 13px; color: var(--text-muted); }
 
-/* Внутри лобби */
+/* --- МАГАЗИН --- */
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.shop-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--surface-2); padding: 16px; border-radius: 12px; text-align: center; }
+.shop-item.equipped { border: 2px solid var(--primary); }
+.shop-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+
+/* --- ЛОББИ --- */
 .lobby-screen { display: flex; flex-direction: column; gap: 20px; min-height: 500px; }
 .lobby-header { display: flex; justify-content: space-between; align-items: center; }
 .lobby-body { display: flex; gap: 20px; flex: 1; }
-
-/* Левая часть (Игроки) */
 .players-panel { flex: 2; display: flex; flex-direction: column; }
 .player-list { display: flex; flex-direction: column; gap: 8px; }
-.player-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--surface-2);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+.player-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface-2); border-radius: 8px; cursor: pointer; transition: background 0.2s; }
 .player-item:hover { background: #475569; }
 .player-item .avatar { width: 40px; height: 40px; font-size: 18px; }
 .player-item .info { flex: 1; }
 .player-item .info .nick { font-weight: 600; font-size: 16px; }
 .player-item .info .login { font-size: 13px; color: var(--text-muted); }
 .player-item .elo { font-size: 15px; color: var(--primary); font-weight: 700; }
-
-/* Правая часть (Чат) */
 .chat-panel { flex: 1; display: flex; flex-direction: column; background: var(--surface-2); border-radius: var(--radius); padding: 16px; max-height: 450px; }
 .chat-panel h3 { margin-bottom: 12px; font-size: 16px; }
 .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding-right: 4px;}
 .chat-msg { background: var(--surface); padding: 8px 12px; border-radius: 8px; font-size: 14px; word-break: break-word; }
-.chat-msg .author { font-weight: 700; color: var(--primary); margin-right: 6px; }
+.chat-msg .author { font-weight: 700; margin-right: 6px; }
 .chat-input { display: flex; gap: 8px; }
 .chat-input input { flex: 1; background: var(--surface); }
-
-/* Нижняя панель кнопок */
 .bottom-bar { display: flex; gap: 12px; margin-top: auto; }
 .bottom-bar button { padding: 16px; font-size: 16px; }
-
 .leave-btn { flex: 1; }
 .admin .leave-btn { flex: 1; }
 .admin .start-btn { flex: 2; }
 
-/* Модалка */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 24px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: var(--shadow);
-  position: relative;
-}
-.modal .close-btn {
-  position: absolute; top: 12px; right: 12px;
-  background: none; padding: 8px; color: var(--text-muted); font-size: 18px;
-}
+/* --- МОДАЛКИ --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 400px; max-width: 90%; box-shadow: var(--shadow); position: relative; }
+.modal .close-btn { position: absolute; top: 12px; right: 12px; background: none; padding: 8px; color: var(--text-muted); font-size: 18px; }
 .modal .close-btn:hover { color: var(--text); }
 .modal h3 { margin-bottom: 20px; font-size: 20px; }
 .modal .actions { display: flex; gap: 12px; margin-top: 24px; }
 .modal .actions button { flex: 1; padding: 10px; font-size: 14px;}
 
-/* Иконки фигур для аватарок */
+/* --- АВАТАРКИ --- */
 .shape-square::before { content: '■'; }
 .shape-circle::before { content: '●'; }
 .shape-triangle::before { content: '▲'; }
@@ -205,12 +144,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .shape-hexagon::before { content: '⬡'; }
 .shape-star::before { content: '★'; }
 
-
-/* ========================================= */
-/* =============== МИНИ-ИГРА =============== */
-/* ========================================= */
-
-/* Меню выбора игр */
+/* --- ИГРА --- */
 .game-menu { display: flex; flex-direction: column; }
 .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 .game-card { border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
@@ -219,155 +153,169 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 .game-info { padding: 16px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
 .game-name { font-size: 18px; font-weight: 700; }
 
-/* Анимация БУМ */
-.game-anim-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
-.boom-text { font-size: 80px; font-weight: 900; color: var(--primary); animation: boom 0.8s ease-out; }
+/* Анимация старта с конфети */
+.game-anim-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; text-align:center; z-index:10; }
+.game-title-anim { 
+  font-size: clamp(24px, 6vw, 48px); 
+  font-weight: 900; 
+  color: var(--primary); 
+  animation: boom 0.8s ease-out;
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
 @keyframes boom {
   0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Экран игры */
-.game-screen { 
-  display: flex; 
-  flex-direction: column; 
-  min-height: 500px; 
-  background: var(--surface); 
-  border-radius: var(--radius); 
-  padding: 32px; 
-}
+/* Игровое поле */
+.game-screen { display: flex; flex-direction: column; min-height: 500px; background: var(--surface); border-radius: var(--radius); padding: 32px; }
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 .timer { font-size: 24px; font-weight: 800; color: var(--danger); background: rgba(239,68,68,0.1); padding: 8px 16px; border-radius: 8px; }
 
-/* Квадраты по центру */
-.game-board { 
-  display: flex; 
-  gap: 16px; 
-  justify-content: center; 
-  margin-bottom: 50px; 
-}
+/* Квадраты по центру (ОПТИМИЗИРОВАНО) */
+.game-board { display: flex; gap: clamp(6px, 2vw, 16px); justify-content: center; margin-bottom: 50px; flex-wrap: nowrap; }
 .game-slot { 
-  width: 80px; 
-  height: 80px; 
+  width: clamp(45px, 15vw, 80px); 
+  height: clamp(45px, 15vw, 80px); 
   border-radius: 16px; 
   border: 3px dashed var(--surface-2); 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  transition: all 0.3s; 
-  background: var(--bg); 
+  display: flex; align-items: center; justify-content: center; 
+  transition: all 0.3s; background: var(--bg); 
 }
-.game-slot:hover { border-color: var(--primary); }
-
-/* Фигура внутри квадрата */
 .shape-in-slot { 
-  width: 100%; 
-  height: 100%; 
-  border-radius: 12px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 36px; 
-  color: white; 
+  width: 100%; height: 100%; border-radius: 12px; display: flex; 
+  align-items: center; justify-content: center; 
+  font-size: clamp(20px, 5vw, 36px); color: white; 
   animation: pop 0.2s ease-out; 
 }
-@keyframes pop { 
-  0% { transform: scale(0.5); } 
-  100% { transform: scale(1); } 
-}
+@keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
 
-/* Панель с фигурами снизу */
-.game-shapes-bar { 
-  display: flex; 
-  gap: 20px; 
-  justify-content: center; 
-}
+/* Панель с фигурами снизу (ОПТИМИЗИРОВАНО) */
+.game-shapes-bar { display: flex; gap: clamp(8px, 3vw, 20px); justify-content: center; }
 .shape-btn { 
-  width: 64px; 
-  height: 64px; 
-  border-radius: 50%; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 28px; 
-  color: white; 
-  cursor: pointer; 
-  transition: transform 0.2s, box-shadow 0.2s; 
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+  width: clamp(45px, 12vw, 64px); 
+  height: clamp(45px, 12vw, 64px); 
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+  font-size: clamp(18px, 4vw, 28px); color: white; cursor: pointer; 
+  transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
 }
-.shape-btn:hover { 
-  transform: scale(1.15); 
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+.shape-btn:hover { transform: scale(1.15); }
+
+/* ========================================= */
+/* ========= АНИМАЦИИ НИКНЕЙМОВ ============ */
+/* ========================================= */
+
+/* Базовые */
+.color-red { color: #ef4444; text-shadow: 0 0 5px #ef4444; }
+.color-green { color: #22c55e; text-shadow: 0 0 5px #22c55e; }
+.color-blue { color: #3b82f6; text-shadow: 0 0 5px #3b82f6; }
+.color-yellow { color: #eab308; text-shadow: 0 0 5px #eab308; }
+.color-orange { color: #f97316; text-shadow: 0 0 5px #f97316; }
+.color-pink { color: #ec4899; text-shadow: 0 0 5px #ec4899; }
+.color-white { color: #ffffff; text-shadow: 0 0 5px #ffffff; }
+
+/* Анимированные */
+.anim-rainbow {
+  background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 3s linear infinite;
+}
+@keyframes animGradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+.anim-darkpurple {
+  background: linear-gradient(90deg, #000000, #6b21a8, #000000);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 4s linear infinite;
 }
 
-/* ============ РЕДАКТОР АВАТАРОК ============ */
-.avatar-editor-overlay {
-  position: fixed; inset: 0;
-  background: rgba(15, 23, 42, 0.95);
-  z-index: 2000;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 20px;
+.anim-fire {
+  background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #ff8800, #ff0000);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 2s linear infinite;
 }
 
-.editor-crop-area {
-  width: 300px; height: 300px;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-  box-shadow: 0 0 0 4px var(--surface-2), 0 10px 30px rgba(0,0,0,0.5);
-  cursor: grab;
-  touch-action: none; /* Отключаем скролл страницы при перетаскивании */
-}
-.editor-crop-area:active { cursor: grabbing; }
-
-.editor-crop-area img {
-  position: absolute;
-  top: 0; left: 0;
-  transform-origin: top left;
-  pointer-events: none; /* Чтобы клики шли в контейнер */
+.anim-ocean {
+  background: linear-gradient(90deg, #0000ff, #00ffff, #0000ff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 5s linear infinite;
 }
 
-/* Сетка как в телефоне */
-.editor-grid {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  border-radius: 50%;
-  background-image: 
-    linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
-  background-size: 33.33% 33.33%;
-  background-position: center;
+.anim-acid {
+  background: linear-gradient(90deg, #aaff00, #00ff00, #aaff00);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 1.5s linear infinite;
 }
 
-.editor-controls {
-  margin-top: 30px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 400px;
+.anim-gold {
+  background: linear-gradient(90deg, #ffd700, #ffaa00, #ffd700);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 3s linear infinite;
 }
 
-.editor-controls input[type="range"] {
-  flex: 1;
-  accent-color: var(--primary);
+.anim-matrix {
+  background: linear-gradient(90deg, #00ff00, #000000, #00ff00);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 2s linear infinite;
 }
 
-.editor-buttons {
-  margin-top: 40px;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 400px;
+/* Легендарные (Пассивки) */
+.legend-passive-1 {
+  background: linear-gradient(90deg, #00ffff, #ffffff, #00ffff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 2s linear infinite;
+  filter: drop-shadow(0 0 5px #00ffff);
+}
+.legend-passive-2 {
+  background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 3s linear infinite;
+  filter: drop-shadow(0 0 8px #ff00ff);
+}
+.mythic-passive {
+  background: linear-gradient(90deg, #ff0000, #ff00ff, #00ffff, #ff0000);
+  background-size: 300% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animGradient 1s linear infinite;
+  filter: drop-shadow(0 0 10px #ff00ff);
 }
 
-.editor-buttons button {
-  background: none;
-  color: var(--primary);
-  font-size: 16px;
-  padding: 10px 20px;
+/* Триггеры (временные анимации) */
+.trigger-lightning { animation: shake 0.2s infinite; color: #fff; text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; }
+.trigger-shake { animation: shake 0.1s infinite; color: #ef4444; text-shadow: 0 0 20px #ef4444; }
+.trigger-glow { color: #fff; text-shadow: 0 0 20px #fff, 0 0 40px #fff; }
+@keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+
+.trigger-stars { color: #ffd700; text-shadow: 0 0 10px #ffd700, 0 0 20px #fff; }
+.trigger-warp { transform: scaleX(2); opacity: 0.8; transition: all 0.5s; }
+.trigger-blackhole { color: transparent; text-shadow: 0 0 20px #000; }
+.trigger-supernova { color: #fff; text-shadow: 0 0 30px #fff, 0 0 50px #ff00ff; transform: scale(1.2); transition: all 0.5s; }
+.trigger-glitch { animation: glitch 0.2s infinite; }
+@keyframes glitch { 0% { transform: translate(0) } 20% { transform: translate(-2px, 2px) } 40% { transform: translate(-2px, -2px) } 60% { transform: translate(2px, 2px) } 80% { transform: translate(2px, -2px) } 100% { transform: translate(0) } }
+.trigger-matrix-rain { color: #0f0; text-shadow: 0 0 10px #0f0; }
+.trigger-blood { color: #f00; text-shadow: 0 0 20px #f00, 0 0 40px #f00; font-weight: 900; }
+.trigger-angel { color: #fff; text-shadow: 0 0 20px #fff, 0 0 40px #ffd700; transform: translateY(-5px); transition: all 0.5s; }
+
+/* --- МОБИЛЬНАЯ ОПТИМИЗАЦИЯ (МЕДИА-ЗАПРОСЫ) --- */
+@media (max-width: 768px) {
+  #app { padding: 10px; }
+  .lobby-body { flex-direction: column; }
+  .chat-panel { max-height: 250px; margin-top: 20px; }
+  .game-screen { padding: 16px; min-height: 400px; }
+  .game-header { margin-bottom: 20px; }
+  .top-bar { padding: 12px; }
+  .top-bar .info .name { font-size: 16px; }
+  .modal { width: 95%; padding: 16px; }
+  .bottom-bar { flex-direction: column; }
+  .admin .leave-btn { flex: 1; width: 100%; }
+  .admin .start-btn { flex: 1; width: 100%; }
 }
-.editor-buttons button:hover { background: var(--surface-2); }

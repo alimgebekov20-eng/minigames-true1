@@ -33,7 +33,7 @@ function generateAvatar() {
 function sanitizeLobby(lobby) {
   return {
     id: lobby.id, name: lobby.name, maxPlayers: lobby.maxPlayers, hasChat: lobby.hasChat, adminId: lobby.adminId,
-    players: lobby.players.map(p => ({ id: p.id, login: p.login, nickname: p.nickname, elo: p.elo, avatar: p.avatar, avatarUrl: p.avatarUrl })),
+    players: lobby.players.map(p => ({ id: p.id, login: p.login, nickname: p.nickname, elo: p.elo, avatar: p.avatar, avatarUrl: p.avatarUrl, nameColor: p.nameColor || 'default' })),
     chat: lobby.chat, gameState: lobby.gameState || null
   };
 }
@@ -66,19 +66,19 @@ io.on('connection', (socket) => {
     
     const userId = crypto.randomUUID();
     const token = crypto.randomUUID();
-    const user = { id: userId, login, nickname, elo: 1000, avatar: generateAvatar(), avatarUrl: null, token, createdAt: Date.now() };
+    const user = { id: userId, login, nickname, elo: 1000, avatar: generateAvatar(), avatarUrl: null, nameColor: 'default', token, createdAt: Date.now() };
     
     db.users[userId] = user;
     saveDB();
     socket.userId = userId;
-    callback({ success: true, user: { id: userId, login, nickname, elo: user.elo, avatar: user.avatar, avatarUrl: user.avatarUrl }, token });
+    callback({ success: true, user: { id: userId, login, nickname, elo: user.elo, avatar: user.avatar, avatarUrl: user.avatarUrl, nameColor: user.nameColor }, token });
   });
 
   socket.on('login', ({ token }, callback) => {
     const user = Object.values(db.users).find(u => u.token === token);
     if (!user) return callback({ error: 'Неверный токен' });
     socket.userId = user.id;
-    callback({ success: true, user: { id: user.id, login: user.login, nickname: user.nickname, elo: user.elo, avatar: user.avatar, avatarUrl: user.avatarUrl } });
+    callback({ success: true, user: { id: user.id, login: user.login, nickname: user.nickname, elo: user.elo, avatar: user.avatar, avatarUrl: user.avatarUrl, nameColor: user.nameColor || 'default' } });
   });
 
   socket.on('updateNickname', ({ userId, nickname }, callback) => {
@@ -94,6 +94,52 @@ io.on('connection', (socket) => {
       if (p) p.avatarUrl = avatarUrl;
     });
     callback({ success: true }); io.emit('lobbiesUpdated');
+  });
+
+  socket.on('buyColor', ({ userId, colorId, price }, callback) => {
+    const user = db.users[userId];
+    if (!user) return callback({ error: 'Ошибка' });
+    if (user.elo < price) return callback({ error: 'Недостаточно ЭЛО' });
+    
+    user.elo -= price;
+    user.nameColor = colorId;
+    saveDB();
+    callback({ success: true, newElo: user.elo });
+  });
+
+  socket.on('equipColor', ({ userId, colorId }, callback) => {
+    const user = db.users[userId];
+    if (!user) return callback({ error: 'Ошибка' });
+    user.nameColor = colorId;
+    saveDB();
+    callback({ success: true });
+  });
+
+  socket.on('devUnlockAll', ({ userId }, callback) => {
+    const user = db.users[userId];
+    if (!user) return callback({ error: 'Ошибка' });
+    // Просто ставим максимальный ЭЛО для теста
+    user.elo = 10000; 
+    saveDB();
+    callback({ success: true, newElo: user.elo });
+  });
+
+  socket.on('getLeaderboard', ({ userId }, callback) => {
+    const sortedUsers = Object.values(db.users).sort((a, b) => b.elo - a.elo);
+    const top100 = sortedUsers.slice(0, 100).map((u, index) => ({
+      id: u.id, nickname: u.nickname, login: u.login, elo: u.elo, nameColor: u.nameColor || 'default', avatar: u.avatar, avatarUrl: u.avatarUrl, rank: index + 1
+    }));
+    
+    let userRank = sortedUsers.findIndex(u => u.id === userId) + 1;
+    if (userRank === 0) userRank = sortedUsers.length + 1;
+
+    callback({ top100, userRank, myData: { nickname: sortedUsers[userRank-1]?.nickname, elo: sortedUsers[userRank-1]?.elo, nameColor: sortedUsers[userRank-1]?.nameColor } });
+  });
+
+  socket.on('getPlayerRank', ({ targetId }, callback) => {
+    const sortedUsers = Object.values(db.users).sort((a, b) => b.elo - a.elo);
+    const rank = sortedUsers.findIndex(u => u.id === targetId) + 1;
+    callback({ rank });
   });
 
   socket.on('getLobbies', (callback) => {
@@ -153,7 +199,7 @@ io.on('connection', (socket) => {
   socket.on('chatMessage', ({ lobbyId, user, text }, callback) => {
     const lobby = db.lobbies[lobbyId];
     if (!lobby || !lobby.hasChat) return callback({ error: 'Чат выключен' });
-    const msg = { id: crypto.randomUUID(), userId: user.id, nickname: user.nickname, text, time: Date.now() };
+    const msg = { id: crypto.randomUUID(), userId: user.id, nickname: user.nickname, nameColor: user.nameColor, text, time: Date.now() };
     lobby.chat.push(msg); if (lobby.chat.length > 30) lobby.chat.shift(); saveDB();
     io.to(lobbyId).emit('newMessage', msg); callback({ success: true });
   });
@@ -177,7 +223,7 @@ io.on('connection', (socket) => {
       sequence: [null, null, null, null, null], guesserId: null, guesserName: null, round: 1, guess: [null, null, null, null, null]
     };
     saveDB(); io.to(lobbyId).emit('lobbyUpdated', sanitizeLobby(lobby));
-    io.to(lobbyId).emit('gameStartedAnimation', { creatorName: randomCreator.nickname }); callback({ success: true });
+    io.to(lobbyId).emit('gameStartedAnimation', { gameName: 'Угадай Последовательность', creatorName: randomCreator.nickname }); callback({ success: true });
   });
 
   socket.on('gameAction', ({ lobbyId, playerId, action, index, shape, role }, callback) => {
@@ -202,9 +248,8 @@ io.on('connection', (socket) => {
     const gs = lobby.gameState;
     if (gs.creatorId !== playerId || gs.sequence.includes(null)) return callback({ error: 'Ошибка' });
 
-    // ИСПРАВЛЕНИЕ: Исключаем создателя из списка угадывающих
     const eligibleGuessers = lobby.players.filter(p => p.id !== gs.creatorId);
-    if (eligibleGuessers.length === 0) return; // Защита на случай багов
+    if (eligibleGuessers.length === 0) return; 
 
     const firstGuesser = eligibleGuessers[0];
 
@@ -279,7 +324,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ИСПРАВЛЕНИЕ: Передаем ход строго по списку тех, кто НЕ создатель
       const eligibleGuessers = lobby.players.filter(p => p.id !== gs.creatorId);
       const currentIndex = eligibleGuessers.findIndex(p => p.id === gs.guesserId);
       const nextPlayer = eligibleGuessers[(currentIndex + 1) % eligibleGuessers.length];

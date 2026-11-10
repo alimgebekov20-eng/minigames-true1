@@ -345,8 +345,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
 @keyframes shiftBgY { 0% { background-position: 50% 0%; } 100% { background-position: 50% 200%; } }
 @keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 1; } }
 
-
-/* ===== МИФИЧЕСКАЯ СИНГУЛЯРНОСТЬ (ИСПРАВЛЕННАЯ) ===== */
+/* ===== МИФИЧЕСКАЯ СИНГУЛЯРНОСТЬ (НОВАЯ) ===== */
 .mythic-wrapper {
   position: relative;
   display: inline-flex;
@@ -361,9 +360,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   font-weight: 900;
   display: inline-block;
   
-  background: 
-    radial-gradient(circle at center, #000 15%, transparent 40%),
-    conic-gradient(from var(--angle), #ff00ff, #00ffff, #ffff00, #ff0000, #ff00ff);
+  background: conic-gradient(from var(--angle), #ff00ff, #00ffff, #ffff00, #ff0000, #ff00ff);
   background-size: 200% 200%;
   background-position: center;
   
@@ -373,25 +370,24 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   color: transparent !important;
   
   animation: 
-    spinColors 0.8s linear infinite,
-    suckColors 3.2s infinite;
+    spinColors 2s linear infinite,
+    suckColors 6s infinite ease-in-out;
 }
 
 .black-hole {
   position: absolute;
   top: 50%; left: 50%;
-  width: 150%; 
-  height: 150%;
-  background: radial-gradient(circle, #fff 10%, #ffff00 30%, #ff8800 60%, transparent 80%);
+  width: 3em; 
+  height: 3em;
+  background: radial-gradient(circle, #000 40%, #ffff00 60%, #ff8800 80%, transparent 100%);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   z-index: 3;
   pointer-events: none;
-  box-shadow: 0 0 10px #ffff00, 0 0 20px #ff8800;
-  mix-blend-mode: screen;
+  box-shadow: 0 0 15px #ffff00, 0 0 30px #ff8800;
   
-  animation: blackHoleCycle 3.2s infinite;
+  animation: blackHoleCycle 6s infinite ease-in-out;
 }
 
 @property --angle {
@@ -405,29 +401,46 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   100% { --angle: 360deg; }
 }
 
+/* Тайминг 6 секунд:
+   0-1.5с (0-25%): Обычный радужный прокрут.
+   1.5-1.8с (25-30%): Дыра резко появляется.
+   1.8-2.1с (30-35%): Замедляется, останавливается.
+   2.1-2.4с (35-40%): Снова ускоряется, чуть уменьшается.
+   2.4-3.0с (40-50%): Трясется.
+   3.0-4.2с (50-70%): Втягивает цвета (текст становится черным).
+   4.2-5.4с (70-90%): Пауза, черный текст.
+   5.4-6.0с (90-100%): Цвета возвращаются.
+*/
+
 @keyframes suckColors {
   0%, 25% {
     background-size: 200% 200%;
     -webkit-text-fill-color: transparent !important;
-    text-shadow: none;
+    -webkit-text-stroke: 0px transparent;
   }
-  25.1% {
+  30% {
     background-size: 200% 200%;
   }
-  37.5% {
-    background-size: 0% 0%;
-    -webkit-text-fill-color: #000 !important; 
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); 
+  50% {
+    /* Начинается втягивание */
+    background-size: 200% 200%;
   }
-  87.5% {
+  70% {
+    /* Цвета втянуты, остался черный текст с белой обводкой */
     background-size: 0% 0%;
     -webkit-text-fill-color: #000 !important;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
   }
-  87.6% {
+  90% {
+    background-size: 0% 0%;
+    -webkit-text-fill-color: #000 !important;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
+  }
+  91% {
+    /* Возврат */
     -webkit-text-fill-color: transparent !important;
+    -webkit-text-stroke: 0px transparent;
     background-size: 200% 200%;
-    text-shadow: none;
   }
   100% {
     background-size: 200% 200%;
@@ -439,29 +452,57 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
   }
-  25.1% {
+  26% {
+    /* Резко появляется */
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  30% {
+    /* Замедляется */
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
-  37.5% {
-    transform: translate(-50%, -50%) scale(1.5) rotate(720deg);
+  33% {
+    /* Останавливается на миг */
+    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
+  }
+  36% {
+    /* Снова ускоряется */
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 1;
+  }
+  40% {
+    /* Чуть уменьшается */
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  42% {
+    /* Начинает трястись */
+    transform: translate(calc(-50% - 2px), calc(-50% + 2px)) scale(1.1) rotate(10deg);
+  }
+  44% {
+    transform: translate(calc(-50% + 2px), calc(-50% - 2px)) scale(1.1) rotate(-10deg);
+  }
+  46% {
+    transform: translate(calc(-50% - 2px), calc(-50% + 2px)) scale(1.1) rotate(10deg);
+  }
+  48% {
+    transform: translate(calc(-50% + 2px), calc(-50% - 2px)) scale(1.1) rotate(-10deg);
   }
   50% {
-    transform: translate(-50%, -50%) scaleX(0) scaleY(1.5) rotate(1080deg);
+    /* Тряска заканчивается, начинает втягивать */
+    transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
     opacity: 1;
   }
-  87.5% {
-    transform: translate(-50%, -50%) scaleX(0) scaleY(1.5) rotate(1080deg);
-    opacity: 1;
-  }
-  87.6% {
+  70% {
+    /* Дыра всасывает цвета и пропадает */
+    transform: translate(-50%, -50%) scale(0) rotate(1080deg);
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
   }
   100% {
-    opacity: 0;
     transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
   }
 }
 

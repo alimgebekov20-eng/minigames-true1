@@ -370,9 +370,9 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   -webkit-text-fill-color: transparent;
   
   /* Анимация: вращение и втягивание */
-  animation: 
-    spinColors 0.25s linear infinite,
-    suckColors 4s infinite;
+    animation: 
+    spinColors 0.8s linear infinite,
+    suckColors 3.2s infinite;
 }
 
 /* Объект "Черная дыра" (не привязан к тексту) */
@@ -390,7 +390,7 @@ label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--text-m
   box-shadow: 0 0 10px #ffff00, 0 0 20px #ff8800;
   mix-blend-mode: screen;
   
-  animation: blackHoleCycle 4s infinite;
+  animation: blackHoleCycle 3.2s infinite;
 }
 
 @property --angle {

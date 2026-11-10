@@ -57,9 +57,18 @@ function getColorClass(colorId) {
   return c ? c.css : '';
 }
 
+// ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ МИФИЧЕСКОГО ЦВЕТА
 function formatName(user) {
   const cssClass = getColorClass(user.nameColor || 'default');
-  if (cssClass.startsWith('anim-') || cssClass.startsWith('legend-') || cssClass.startsWith('mythic-')) {
+  
+  if (cssClass === 'mythic-singularity') {
+    return `<span class="mythic-wrapper">
+      <span class="mythic-text">${user.nickname}</span>
+      <span class="black-hole"></span>
+    </span>`;
+  }
+  
+  if (cssClass.startsWith('anim-') || cssClass.startsWith('legend-')) {
     return `<span class="${cssClass}">${user.nickname}</span>`;
   }
   return `<span style="${cssClass}">${user.nickname}</span>`;

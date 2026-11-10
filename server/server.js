@@ -12,32 +12,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// МАРШРУТ ДЛЯ СБРОСА БАЗЫ ДАННЫХ (открой в браузере /reset-db-123)
-app.get('/reset-db-123', (req, res) => {
-  db = { users: {}, lobbies: {} };
-  saveDB();
-  res.send('<h1>База данных успешно очищена! Теперь можно регистрироваться.</h1><a href="/">Вернуться на сайт</a>');
-});
-
 app.use(express.static(__dirname));
 
 const dbFile = path.join(__dirname, 'db.json');
 let db = { users: {}, lobbies: {} };
 
 function loadDB() {
-  if (fs.existsSync(dbFile)) { 
-    try { 
-      const raw = fs.readFileSync(dbFile, 'utf8');
-      if (raw.trim() !== '') {
-        db = JSON.parse(raw); 
-      }
-    } catch (e) {
-      console.error('Ошибка чтения БД, создаем новую');
-    } 
-  }
-  // Защита от битого формата
-  if (!db.users || typeof db.users !== 'object') db.users = {};
-  if (!db.lobbies || typeof db.lobbies !== 'object') db.lobbies = {};
+  if (fs.existsSync(dbFile)) { try { db = JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch (e) {} }
 }
 function saveDB() {
   try { fs.writeFileSync(dbFile, JSON.stringify(db, null, 2)); } catch (e) {}
@@ -80,17 +61,7 @@ function handleLeaveLobby(socket, lobby, lobbyId) {
 
 io.on('connection', (socket) => {
   socket.on('register', ({ login, nickname }, callback) => {
-    // Защита от пустых значений
-    if (!login || !nickname) return callback({ error: 'Заполните все поля' });
-    
-    // Ищем совпадение по логину (безопасный перебор)
-    let existing = null;
-    for (const id in db.users) {
-      if (db.users[id] && db.users[id].login === login) {
-        existing = db.users[id];
-        break;
-      }
-    }
+    const existing = Object.values(db.users).find(u => u.login === login);
     if (existing) return callback({ error: 'Логин уже занят' });
     
     const userId = crypto.randomUUID();
@@ -147,6 +118,7 @@ io.on('connection', (socket) => {
   socket.on('devUnlockAll', ({ userId }, callback) => {
     const user = db.users[userId];
     if (!user) return callback({ error: 'Ошибка' });
+    // Просто ставим максимальный ЭЛО для теста
     user.elo = 10000; 
     saveDB();
     callback({ success: true, newElo: user.elo });

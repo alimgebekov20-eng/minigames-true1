@@ -202,11 +202,17 @@ io.on('connection', (socket) => {
     const gs = lobby.gameState;
     if (gs.creatorId !== playerId || gs.sequence.includes(null)) return callback({ error: 'Ошибка' });
 
-    const creatorIndex = lobby.players.findIndex(p => p.id === gs.creatorId);
-    const nextPlayer = lobby.players[(creatorIndex + 1) % lobby.players.length];
+    // ИСПРАВЛЕНИЕ: Исключаем создателя из списка угадывающих
+    const eligibleGuessers = lobby.players.filter(p => p.id !== gs.creatorId);
+    if (eligibleGuessers.length === 0) return; // Защита на случай багов
 
-    gs.status = 'guessing'; gs.guesserId = nextPlayer.id; gs.guesserName = nextPlayer.nickname;
+    const firstGuesser = eligibleGuessers[0];
+
+    gs.status = 'guessing'; 
+    gs.guesserId = firstGuesser.id; 
+    gs.guesserName = firstGuesser.nickname;
     gs.guess = [null, null, null, null, null];
+    
     saveDB(); io.to(lobbyId).emit('lobbyUpdated', sanitizeLobby(lobby)); callback({ success: true });
   });
 
@@ -273,13 +279,16 @@ io.on('connection', (socket) => {
         return;
       }
 
-      const currentIndex = lobby.players.findIndex(p => p.id === gs.guesserId);
-      const nextPlayer = lobby.players[(currentIndex + 1) % lobby.players.length];
+      // ИСПРАВЛЕНИЕ: Передаем ход строго по списку тех, кто НЕ создатель
+      const eligibleGuessers = lobby.players.filter(p => p.id !== gs.creatorId);
+      const currentIndex = eligibleGuessers.findIndex(p => p.id === gs.guesserId);
+      const nextPlayer = eligibleGuessers[(currentIndex + 1) % eligibleGuessers.length];
       
-      gs.guesserId = nextPlayer.id; gs.guesserName = nextPlayer.nickname; gs.guess = [null, null, null, null, null];
+      gs.guesserId = nextPlayer.id; 
+      gs.guesserName = nextPlayer.nickname; 
+      gs.guess = [null, null, null, null, null];
       saveDB();
       
-      // Отправляем результат хода, передаем сам массив guess для отображения
       io.to(lobbyId).emit('gameTurnResult', { result, nextGuesserName: nextPlayer.nickname, guess: guess });
       io.to(lobbyId).emit('lobbyUpdated', sanitizeLobby(lobby));
     }
